@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <img src="icons/icon48.png" width="28" height="28" alt="" />
+        <div class="title">GoodbyeDPI <span>for Chrome</span></div>
+      </div>
+
+      <button id="toggle" class="toggle off" aria-pressed="false">
+        <span class="knob"></span>
+        <span class="label">꺼짐</span>
+      </button>
+
+      <div class="status">
+        <div class="row">
+          <span class="dot" id="proxyDot"></span>
+          <span id="proxyText">프록시: 꺼짐</span>
+        </div>
+        <div class="row">
+          <span class="dot" id="backendDot"></span>
+          <span id="backendText">백엔드 확인 중…</span>
+        </div>
+      </div>
+
+      <div id="hint" class="hint hidden"></div>
+
+      <div class="footer">
+        <span id="endpoint">127.0.0.1:1080</span>
+        <a id="openOptions" href="#">설정</a>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

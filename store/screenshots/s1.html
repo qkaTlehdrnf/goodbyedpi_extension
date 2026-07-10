@@ -1,0 +1,84 @@
+<!doctype html><html><head><meta charset='utf-8'><style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:800px;overflow:hidden}
+body{font-family:'Malgun Gothic','Segoe UI',system-ui,sans-serif;
+  background:radial-gradient(1100px 600px at 18% -10%,#1e3a8a 0%,transparent 55%),
+             radial-gradient(900px 600px at 105% 110%,#0f766e 0%,transparent 50%),
+             #0b1220;color:#e2e8f0;position:relative}
+.wrap{position:absolute;inset:0;padding:88px 96px;display:flex;flex-direction:column}
+.badge{display:inline-flex;align-items:center;gap:10px;font-size:20px;color:#7dd3fc;
+  font-weight:700;letter-spacing:.5px;margin-bottom:22px}
+.badge img{width:34px;height:34px}
+h1{font-size:60px;font-weight:800;line-height:1.12;letter-spacing:-1px}
+h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.sub{font-size:25px;color:#94a3b8;margin-top:20px;line-height:1.5;font-weight:400}
+.en{font-size:19px;color:#64748b;margin-top:10px}
+.bullets{margin-top:30px;font-size:22px;color:#cbd5e1;line-height:2}
+.bullets b{color:#5eead4}
+
+/* real popup card, scaled up */
+.popup{width:430px;background:#0f172a;border:1px solid #24324a;border-radius:22px;
+  padding:26px;box-shadow:0 40px 80px rgba(0,0,0,.5)}
+.p-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.p-head img{width:40px;height:40px}
+.p-title{font-size:22px;font-weight:800}
+.p-title span{font-weight:400;color:#94a3b8;font-size:18px}
+.toggle{width:100%;height:78px;border-radius:18px;display:flex;align-items:center;
+  padding:0 26px;font-size:22px;font-weight:800;color:#fff;position:relative}
+.toggle .knob{position:absolute;width:32px;height:32px;border-radius:50%;background:#fff}
+.toggle.on{background:linear-gradient(135deg,#2563eb,#16b9a0)}
+.toggle.on .knob{right:26px}
+.toggle.on .label{margin-right:auto}
+.toggle.off{background:#334155}
+.toggle.off .knob{left:26px}
+.toggle.off .label{margin-left:auto}
+.status{margin-top:22px;background:#1e293b;border-radius:14px;padding:16px 18px;font-size:18px}
+.row{display:flex;align-items:center;gap:12px;padding:6px 0}
+.dot{width:13px;height:13px;border-radius:50%;background:#64748b}
+.dot.ok{background:#16b9a0}.dot.warn{background:#f59e0b}
+.foot{margin-top:20px;display:flex;justify-content:space-between;font-size:17px;color:#94a3b8}
+.foot .lnk{color:#60a5fa}
+
+/* lanes / diagram */
+.lane{display:flex;align-items:center;gap:22px;font-size:24px;font-weight:700}
+.pill{padding:16px 26px;border-radius:16px;font-size:23px;font-weight:700}
+.pill.chrome{background:#1e293b;border:1px solid #334155}
+.pill.proxy{background:linear-gradient(135deg,#1d4ed8,#0d9488);color:#fff}
+.pill.app{background:#161f31;border:1px solid #263349;color:#94a3b8}
+.pill.net{background:#0e1a2b;border:1px solid #24324a}
+.arrow{color:#475569;font-size:30px;font-weight:800}
+.arrow.hot{color:#2dd4bf}
+.tag{font-size:16px;padding:5px 12px;border-radius:999px;font-weight:700}
+.tag.ok{background:rgba(45,212,191,.15);color:#5eead4}
+.tag.no{background:rgba(148,163,184,.12);color:#94a3b8}
+
+/* steps */
+.steps{display:flex;gap:26px;margin-top:40px}
+.step{flex:1;background:#0f172a;border:1px solid #24324a;border-radius:20px;padding:30px}
+.step .n{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#16b9a0);
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff}
+.step h3{font-size:24px;margin:20px 0 12px}
+.step p{font-size:18px;color:#94a3b8;line-height:1.55}
+
+.row2{display:flex;gap:60px;align-items:center;margin-top:26px}
+.center{align-items:center;text-align:center}
+.footnote{position:absolute;left:96px;bottom:54px;font-size:17px;color:#5c6b82}
+</style></head><body>
+<div class="wrap">
+  <div class="badge"><img src="../../extension/icons/icon128.png">GOODBYEDPI FOR CHROME</div>
+  <h1>클릭 한 번으로<br><span class="accent">Chrome만</span> 검열 우회</h1>
+  <div class="sub">DPI 우회를 토글 하나로 켜고 끄세요.<br>이 브라우저에만 적용됩니다.</div>
+  <div class="en">Toggle DPI-bypass on/off — for this browser only.</div>
+</div>
+<div style="position:absolute;right:120px;top:50%;transform:translateY(-50%)">
+    <div class="popup">
+      <div class="p-head"><img src="../../extension/icons/icon128.png"><div class="p-title">GoodbyeDPI <span>for Chrome</span></div></div>
+      <div class="toggle on"><span class="knob"></span><span class="label">켜짐</span></div>
+      <div class="status">
+        <div class="row"><span class="dot ok"></span><span>프록시: 켜짐 (Chrome 전용)</span></div>
+        <div class="row"><span class="dot ok"></span><span>백엔드: 실행 중 (ciadpi #56308)</span></div>
+      </div>
+      <div class="foot"><span>127.0.0.1:1080</span><span class="lnk">설정</span></div>
+    </div></div>
+</body></html>

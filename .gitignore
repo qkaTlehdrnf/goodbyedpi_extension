@@ -1,0 +1,13 @@
+# runtime state written by the native host
+native-host/ciadpi.pid
+native-host/host.log
+native-host/ciadpi
+installer/files/ciadpi.pid
+installer/files/host.log
+
+# downloaded binary (fetch via backend/download-ciadpi.ps1); kept in installer/files for builds
+backend/ciadpi.exe
+
+# build / packaging output
+installer/Output/
+*.zip

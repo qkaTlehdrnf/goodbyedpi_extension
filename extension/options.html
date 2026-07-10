@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>GoodbyeDPI for Chrome — 설정</title>
+    <style>
+      body { font-family: "Segoe UI", system-ui, "Malgun Gothic", sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:28px; }
+      .wrap { max-width: 620px; margin: 0 auto; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .sub { color:#94a3b8; font-size:13px; margin-bottom:22px; }
+      .field { background:#1e293b; border-radius:10px; padding:16px; margin-bottom:14px; }
+      label { display:block; font-weight:600; margin-bottom:6px; font-size:14px; }
+      .desc { color:#94a3b8; font-size:12px; margin:4px 0 10px; line-height:1.5; }
+      input[type=text], input[type=number], textarea, select {
+        width:100%; background:#0f172a; color:#e2e8f0; border:1px solid #334155;
+        border-radius:8px; padding:9px 10px; font-size:13px; font-family:inherit;
+      }
+      textarea { min-height:80px; resize:vertical; }
+      .inline { display:flex; gap:12px; }
+      .inline > div { flex:1; }
+      .check { display:flex; align-items:center; gap:8px; font-size:14px; }
+      .check input { width:auto; }
+      .presets { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+      .presets button { background:#334155; color:#e2e8f0; border:none; border-radius:8px; padding:7px 11px; font-size:12px; cursor:pointer; }
+      .presets button:hover { background:#475569; }
+      .actions { display:flex; gap:10px; align-items:center; margin-top:8px; }
+      #save { background:linear-gradient(135deg,#2563eb,#16b9a0); color:#fff; border:none; border-radius:9px; padding:11px 22px; font-size:14px; font-weight:700; cursor:pointer; }
+      #status { color:#16b9a0; font-size:13px; }
+      code { background:#0f172a; padding:1px 5px; border-radius:4px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>GoodbyeDPI for Chrome — 설정</h1>
+      <div class="sub">이 프록시는 Chrome 트래픽에만 적용됩니다. 다른 앱은 영향을 받지 않습니다.</div>
+
+      <div class="field">
+        <div class="inline">
+          <div>
+            <label>프록시 주소</label>
+            <input type="text" id="host" value="127.0.0.1" />
+          </div>
+          <div>
+            <label>포트</label>
+            <input type="number" id="port" value="1080" min="1" max="65535" />
+          </div>
+        </div>
+        <div class="desc">로컬 ByeDPI(ciadpi) SOCKS5 프록시의 주소·포트입니다. 기본값 <code>127.0.0.1:1080</code>.</div>
+      </div>
+
+      <div class="field">
+        <label>우회 전략 (ciadpi 인자)</label>
+        <div class="desc">아래 프리셋을 누르거나 직접 입력하세요. ISP·지역마다 잘 되는 조합이 다릅니다.</div>
+        <div class="presets">
+          <button data-args="-s 1 -r 1+s">가벼움 (split)</button>
+          <button data-args="-s 1 -d 3+s --mod-http=h,d --auto=torst -r 1+s">권장</button>
+          <button data-args="-d 1 -f 0 --ttl 1 --auto=torst -r 1+s">강력 (fake)</button>
+        </div>
+        <input type="text" id="args" />
+      </div>
+
+      <div class="field">
+        <label>적용 범위</label>
+        <div class="desc"><b>전체</b>: 모든 Chrome 트래픽을 프록시로. <b>목록</b>: 아래 도메인만 프록시로(나머지는 직접 연결).</div>
+        <select id="mode">
+          <option value="all">전체 (모든 사이트)</option>
+          <option value="list">목록에 있는 도메인만</option>
+        </select>
+        <div style="margin-top:10px">
+          <label>도메인 목록 (한 줄에 하나)</label>
+          <textarea id="domains" placeholder="youtube.com&#10;googlevideo.com&#10;discord.com"></textarea>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="check">
+          <input type="checkbox" id="autostart" />
+          네이티브 호스트로 ciadpi.exe 자동 실행/종료
+        </label>
+        <div class="desc">체크 해제 시 프록시 설정만 바꾸며, ciadpi 는 직접 실행해야 합니다 (<code>backend\start-ciadpi.bat</code>).</div>
+      </div>
+
+      <div class="actions">
+        <button id="save">저장</button>
+        <span id="status"></span>
+      </div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>

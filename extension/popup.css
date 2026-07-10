@@ -1,0 +1,78 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  width: 300px;
+  font-family: "Segoe UI", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.card { padding: 16px; }
+.header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.title { font-size: 15px; font-weight: 700; }
+.title span { font-weight: 400; color: #94a3b8; font-size: 13px; }
+
+.toggle {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  transition: background 0.2s ease;
+}
+.toggle .knob {
+  position: absolute;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s ease;
+}
+.toggle .label { margin-left: auto; }
+.toggle.off { background: #334155; }
+.toggle.off .knob { left: 18px; }
+.toggle.on { background: linear-gradient(135deg, #2563eb, #16b9a0); }
+.toggle.on .knob { left: calc(100% - 40px); }
+.toggle.on .label { margin-left: 0; margin-right: auto; }
+.toggle:disabled { opacity: 0.6; cursor: wait; }
+
+.status {
+  margin-top: 16px;
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+.row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #64748b; flex: none; }
+.dot.ok { background: #16b9a0; }
+.dot.bad { background: #ef4444; }
+.dot.warn { background: #f59e0b; }
+
+.hint {
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  background: #422006;
+  border: 1px solid #854d0e;
+  color: #fde68a;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.hint.hidden { display: none; }
+.hint code { background: rgba(0,0,0,.3); padding: 1px 4px; border-radius: 4px; }
+
+.footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.footer a { color: #60a5fa; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
