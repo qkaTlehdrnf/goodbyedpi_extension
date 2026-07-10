@@ -1,24 +1,23 @@
 <!doctype html><html><head><meta charset='utf-8'><style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1280px;height:800px;overflow:hidden}
-body{font-family:'Malgun Gothic','Segoe UI',system-ui,sans-serif;
+body{font-family:'Segoe UI',system-ui,Arial,sans-serif;
   background:radial-gradient(1100px 600px at 18% -10%,#1e3a8a 0%,transparent 55%),
              radial-gradient(900px 600px at 105% 110%,#0f766e 0%,transparent 50%),
              #0b1220;color:#e2e8f0;position:relative}
 .wrap{position:absolute;inset:0;padding:88px 96px;display:flex;flex-direction:column}
-.badge{display:inline-flex;align-items:center;gap:10px;font-size:20px;color:#7dd3fc;
-  font-weight:700;letter-spacing:.5px;margin-bottom:22px}
+.badge{display:inline-flex;align-items:center;gap:10px;font-size:19px;color:#7dd3fc;
+  font-weight:700;letter-spacing:1px;margin-bottom:22px}
 .badge img{width:34px;height:34px}
-h1{font-size:60px;font-weight:800;line-height:1.12;letter-spacing:-1px}
+h1{font-size:62px;font-weight:800;line-height:1.1;letter-spacing:-1.5px}
 h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-clip:text;
   background-clip:text;color:transparent}
-.sub{font-size:25px;color:#94a3b8;margin-top:20px;line-height:1.5;font-weight:400}
-.en{font-size:19px;color:#64748b;margin-top:10px}
-.bullets{margin-top:30px;font-size:22px;color:#cbd5e1;line-height:2}
+.sub{font-size:26px;color:#94a3b8;margin-top:22px;line-height:1.5;font-weight:400}
+.bullets{margin-top:30px;font-size:23px;color:#cbd5e1;line-height:2}
 .bullets b{color:#5eead4}
 
 /* real popup card, scaled up */
-.popup{width:430px;background:#0f172a;border:1px solid #24324a;border-radius:22px;
+.popup{width:440px;background:#0f172a;border:1px solid #24324a;border-radius:22px;
   padding:26px;box-shadow:0 40px 80px rgba(0,0,0,.5)}
 .p-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
 .p-head img{width:40px;height:40px}
@@ -49,12 +48,12 @@ h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-
 .pill.net{background:#0e1a2b;border:1px solid #24324a}
 .arrow{color:#475569;font-size:30px;font-weight:800}
 .arrow.hot{color:#2dd4bf}
-.tag{font-size:16px;padding:5px 12px;border-radius:999px;font-weight:700}
+.tag{font-size:16px;padding:6px 14px;border-radius:999px;font-weight:700}
 .tag.ok{background:rgba(45,212,191,.15);color:#5eead4}
 .tag.no{background:rgba(148,163,184,.12);color:#94a3b8}
 
 /* steps */
-.steps{display:flex;gap:26px;margin-top:40px}
+.steps{display:flex;gap:26px;margin-top:44px}
 .step{flex:1;background:#0f172a;border:1px solid #24324a;border-radius:20px;padding:30px}
 .step .n{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#16b9a0);
   display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff}
@@ -66,14 +65,14 @@ h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-
 .footnote{position:absolute;left:96px;bottom:54px;font-size:17px;color:#5c6b82}
 </style></head><body>
 <div class="wrap center" style="align-items:center">
-  <div class="badge" style="justify-content:center"><img src="../../extension/icons/icon128.png">CHROME 전용 격리</div>
-  <h1 style="text-align:center">오직 Chrome에서만.<br><span class="accent">다른 앱은 그대로.</span></h1>
-  <div style="margin-top:70px;display:flex;flex-direction:column;gap:34px">
+  <div class="badge" style="justify-content:center"><img src="../../extension/icons/icon128.png">CHROME-ONLY ISOLATION</div>
+  <h1 style="text-align:center">Only Chrome.<br><span class="accent">Everything else untouched.</span></h1>
+  <div style="margin-top:72px;display:flex;flex-direction:column;gap:34px">
      <div class="lane"><span class="pill chrome">🌐 Chrome</span><span class="arrow hot">──▶</span>
-        <span class="pill proxy">로컬 ByeDPI 프록시</span><span class="arrow hot">──▶</span>
-        <span class="pill net">인터넷</span><span class="tag ok">우회 적용</span></div>
-     <div class="lane"><span class="pill app">🎮 다른 앱 · 브라우저</span><span class="arrow">─────────────▶</span>
-        <span class="pill net">인터넷</span><span class="tag no">직접 연결 · 영향 없음</span></div>
+        <span class="pill proxy">Local ByeDPI proxy</span><span class="arrow hot">──▶</span>
+        <span class="pill net">Internet</span><span class="tag ok">bypassed</span></div>
+     <div class="lane"><span class="pill app">🎮 Other apps &amp; browsers</span><span class="arrow">─────────▶</span>
+        <span class="pill net">Internet</span><span class="tag no">direct · unaffected</span></div>
   </div>
 </div>
 </body></html>

@@ -29,7 +29,7 @@ How it works
 
 Requirements
 • Windows.
-• The free companion app "GoodbyeDPI for Chrome (backend)" must be installed once — it contains the local proxy the extension controls. Download: https://github.com/qkaTlehdrnf/goodbyedpi-chrome/releases/latest/download/GoodbyeDPI-for-Chrome-Setup.exe
+• The free companion app "GoodbyeDPI for Chrome (backend)" must be installed once — it contains the local proxy the extension controls. Download: https://github.com/qkaTlehdrnf/goodbyedpi_extension/releases/latest/download/GoodbyeDPI-for-Chrome-Setup.exe
   (A browser extension cannot manipulate TCP/TLS packets by itself, so the actual bypass runs in this small local helper.)
 
 Privacy

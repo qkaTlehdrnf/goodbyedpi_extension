@@ -29,4 +29,5 @@ _Last updated: 2026-07-10_
   It runs entirely on your device and communicates with no developer-operated server.
 
 ## Contact
-Questions: <YOUR_EMAIL_OR_GITHUB_URL>
+Questions or requests: https://github.com/qkaTlehdrnf/goodbyedpi_extension/issues
+or rladnjswnd0911@gmail.com

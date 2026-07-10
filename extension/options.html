@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>GoodbyeDPI for Chrome — 설정</title>
+    <title>GoodbyeDPI for Chrome — Settings</title>
     <style>
       body { font-family: "Segoe UI", system-ui, "Malgun Gothic", sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:28px; }
       .wrap { max-width: 620px; margin: 0 auto; }
@@ -31,43 +31,43 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>GoodbyeDPI for Chrome — 설정</h1>
-      <div class="sub">이 프록시는 Chrome 트래픽에만 적용됩니다. 다른 앱은 영향을 받지 않습니다.</div>
+      <h1>GoodbyeDPI for Chrome — Settings</h1>
+      <div class="sub">This proxy applies to Chrome only. Other apps are not affected.</div>
 
       <div class="field">
         <div class="inline">
           <div>
-            <label>프록시 주소</label>
+            <label>Proxy host</label>
             <input type="text" id="host" value="127.0.0.1" />
           </div>
           <div>
-            <label>포트</label>
+            <label>Port</label>
             <input type="number" id="port" value="1080" min="1" max="65535" />
           </div>
         </div>
-        <div class="desc">로컬 ByeDPI(ciadpi) SOCKS5 프록시의 주소·포트입니다. 기본값 <code>127.0.0.1:1080</code>.</div>
+        <div class="desc">Address and port of the local ByeDPI (ciadpi) SOCKS5 proxy. Default <code>127.0.0.1:1080</code>.</div>
       </div>
 
       <div class="field">
-        <label>우회 전략 (ciadpi 인자)</label>
-        <div class="desc">아래 프리셋을 누르거나 직접 입력하세요. ISP·지역마다 잘 되는 조합이 다릅니다.</div>
+        <label>Bypass strategy (ciadpi arguments)</label>
+        <div class="desc">Pick a preset or type your own. The combination that works varies by ISP and region.</div>
         <div class="presets">
-          <button data-args="-s 1 -r 1+s">가벼움 (split)</button>
-          <button data-args="-s 1 -d 3+s --mod-http=h,d --auto=torst -r 1+s">권장</button>
-          <button data-args="-d 1 -f 0 --ttl 1 --auto=torst -r 1+s">강력 (fake)</button>
+          <button data-args="-s 1 -r 1+s">Light (split)</button>
+          <button data-args="-s 1 -d 3+s --mod-http=h,d --auto=torst -r 1+s">Recommended</button>
+          <button data-args="-d 1 -f 0 --ttl 1 --auto=torst -r 1+s">Strong (fake)</button>
         </div>
         <input type="text" id="args" />
       </div>
 
       <div class="field">
-        <label>적용 범위</label>
-        <div class="desc"><b>전체</b>: 모든 Chrome 트래픽을 프록시로. <b>목록</b>: 아래 도메인만 프록시로(나머지는 직접 연결).</div>
+        <label>Scope</label>
+        <div class="desc"><b>All sites</b>: send all Chrome traffic through the proxy. <b>List</b>: only the domains below (everything else connects directly).</div>
         <select id="mode">
-          <option value="all">전체 (모든 사이트)</option>
-          <option value="list">목록에 있는 도메인만</option>
+          <option value="all">All sites</option>
+          <option value="list">Only domains in the list</option>
         </select>
         <div style="margin-top:10px">
-          <label>도메인 목록 (한 줄에 하나)</label>
+          <label>Domain list (one per line)</label>
           <textarea id="domains" placeholder="youtube.com&#10;googlevideo.com&#10;discord.com"></textarea>
         </div>
       </div>
@@ -75,13 +75,13 @@
       <div class="field">
         <label class="check">
           <input type="checkbox" id="autostart" />
-          네이티브 호스트로 ciadpi.exe 자동 실행/종료
+          Start/stop ciadpi.exe automatically via the companion app
         </label>
-        <div class="desc">체크 해제 시 프록시 설정만 바꾸며, ciadpi 는 직접 실행해야 합니다 (<code>backend\start-ciadpi.bat</code>).</div>
+        <div class="desc">When unchecked, the extension only changes the proxy setting; start ciadpi yourself (<code>start-ciadpi.bat</code>).</div>
       </div>
 
       <div class="actions">
-        <button id="save">저장</button>
+        <button id="save">Save</button>
         <span id="status"></span>
       </div>
     </div>

@@ -40,7 +40,7 @@ $("save").addEventListener("click", async () => {
     autostart: $("autostart").checked,
   };
   const res = await send({ type: "saveSettings", patch });
-  $("status").textContent = res && res.ok ? "저장됨 ✓" : "저장 실패: " + (res && res.error);
+  $("status").textContent = res && res.ok ? "Saved ✓" : "Save failed: " + (res && res.error);
   setTimeout(() => ($("status").textContent = ""), 2500);
 });
 

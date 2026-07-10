@@ -1,24 +1,23 @@
 <!doctype html><html><head><meta charset='utf-8'><style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1280px;height:800px;overflow:hidden}
-body{font-family:'Malgun Gothic','Segoe UI',system-ui,sans-serif;
+body{font-family:'Segoe UI',system-ui,Arial,sans-serif;
   background:radial-gradient(1100px 600px at 18% -10%,#1e3a8a 0%,transparent 55%),
              radial-gradient(900px 600px at 105% 110%,#0f766e 0%,transparent 50%),
              #0b1220;color:#e2e8f0;position:relative}
 .wrap{position:absolute;inset:0;padding:88px 96px;display:flex;flex-direction:column}
-.badge{display:inline-flex;align-items:center;gap:10px;font-size:20px;color:#7dd3fc;
-  font-weight:700;letter-spacing:.5px;margin-bottom:22px}
+.badge{display:inline-flex;align-items:center;gap:10px;font-size:19px;color:#7dd3fc;
+  font-weight:700;letter-spacing:1px;margin-bottom:22px}
 .badge img{width:34px;height:34px}
-h1{font-size:60px;font-weight:800;line-height:1.12;letter-spacing:-1px}
+h1{font-size:62px;font-weight:800;line-height:1.1;letter-spacing:-1.5px}
 h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-clip:text;
   background-clip:text;color:transparent}
-.sub{font-size:25px;color:#94a3b8;margin-top:20px;line-height:1.5;font-weight:400}
-.en{font-size:19px;color:#64748b;margin-top:10px}
-.bullets{margin-top:30px;font-size:22px;color:#cbd5e1;line-height:2}
+.sub{font-size:26px;color:#94a3b8;margin-top:22px;line-height:1.5;font-weight:400}
+.bullets{margin-top:30px;font-size:23px;color:#cbd5e1;line-height:2}
 .bullets b{color:#5eead4}
 
 /* real popup card, scaled up */
-.popup{width:430px;background:#0f172a;border:1px solid #24324a;border-radius:22px;
+.popup{width:440px;background:#0f172a;border:1px solid #24324a;border-radius:22px;
   padding:26px;box-shadow:0 40px 80px rgba(0,0,0,.5)}
 .p-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
 .p-head img{width:40px;height:40px}
@@ -49,12 +48,12 @@ h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-
 .pill.net{background:#0e1a2b;border:1px solid #24324a}
 .arrow{color:#475569;font-size:30px;font-weight:800}
 .arrow.hot{color:#2dd4bf}
-.tag{font-size:16px;padding:5px 12px;border-radius:999px;font-weight:700}
+.tag{font-size:16px;padding:6px 14px;border-radius:999px;font-weight:700}
 .tag.ok{background:rgba(45,212,191,.15);color:#5eead4}
 .tag.no{background:rgba(148,163,184,.12);color:#94a3b8}
 
 /* steps */
-.steps{display:flex;gap:26px;margin-top:40px}
+.steps{display:flex;gap:26px;margin-top:44px}
 .step{flex:1;background:#0f172a;border:1px solid #24324a;border-radius:20px;padding:30px}
 .step .n{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#16b9a0);
   display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff}
@@ -66,16 +65,16 @@ h1 .accent{background:linear-gradient(90deg,#38bdf8,#2dd4bf);-webkit-background-
 .footnote{position:absolute;left:96px;bottom:54px;font-size:17px;color:#5c6b82}
 </style></head><body>
 <div class="wrap">
-  <div class="badge"><img src="../../extension/icons/icon128.png">작동 방식</div>
-  <h1>어떻게 동작하나요?</h1>
+  <div class="badge"><img src="../../extension/icons/icon128.png">HOW IT WORKS</div>
+  <h1>How does it work?</h1>
   <div class="steps">
-     <div class="step"><div class="n">1</div><h3>토글 ON</h3>
-        <p>확장이 Chrome의 트래픽을 내 PC의 로컬 프록시(127.0.0.1)로 보냅니다.</p></div>
-     <div class="step"><div class="n">2</div><h3>DPI 우회</h3>
-        <p>로컬 ByeDPI 프록시가 TLS 분할·패킷 재정렬·가짜 패킷으로 검열을 우회합니다.</p></div>
-     <div class="step"><div class="n">3</div><h3>Chrome만 적용</h3>
-        <p>Chrome만 프록시를 쓰므로 다른 앱과 다른 프로필은 전혀 영향받지 않습니다.</p></div>
+     <div class="step"><div class="n">1</div><h3>Toggle ON</h3>
+        <p>The extension routes Chrome's traffic to a local proxy (127.0.0.1) running on your own PC.</p></div>
+     <div class="step"><div class="n">2</div><h3>DPI bypass</h3>
+        <p>The local ByeDPI proxy uses TLS record splitting, packet reordering and fake packets to evade DPI.</p></div>
+     <div class="step"><div class="n">3</div><h3>Chrome only</h3>
+        <p>Only Chrome is pointed at the proxy, so other apps and other profiles are unaffected.</p></div>
   </div>
-  <div class="footnote">브라우저 확장은 패킷을 직접 못 다루기 때문에, 실제 우회는 작은 로컬 도우미 앱에서 실행됩니다.</div>
+  <div class="footnote">A browser extension can't touch packets directly, so the real bypass runs in a small local helper app.</div>
 </div>
 </body></html>

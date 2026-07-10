@@ -7,10 +7,10 @@ function send(message) {
 
 function renderProxy(on) {
   $("proxyDot").className = "dot " + (on ? "ok" : "");
-  $("proxyText").textContent = "프록시: " + (on ? "켜짐 (Chrome 전용)" : "꺼짐");
+  $("proxyText").textContent = "Proxy: " + (on ? "on (Chrome only)" : "off");
   toggle.className = "toggle " + (on ? "on" : "off");
   toggle.setAttribute("aria-pressed", on ? "true" : "false");
-  toggle.querySelector(".label").textContent = on ? "켜짐" : "꺼짐";
+  toggle.querySelector(".label").textContent = on ? "ON" : "OFF";
 }
 
 function renderBackend(backend, autostart) {
@@ -21,21 +21,21 @@ function renderBackend(backend, autostart) {
 
   if (!autostart) {
     dot.className = "dot warn";
-    text.textContent = "백엔드: 수동 실행 모드";
+    text.textContent = "Backend: manual mode";
     return;
   }
   if (backend && backend.ok && backend.running) {
     dot.className = "dot ok";
-    text.textContent = "백엔드: 실행 중 (ciadpi" + (backend.pid ? " #" + backend.pid : "") + ")";
+    text.textContent = "Backend: running (ciadpi" + (backend.pid ? " #" + backend.pid : "") + ")";
   } else if (backend && backend.ok) {
     dot.className = "dot warn";
-    text.textContent = "백엔드: 중지됨";
+    text.textContent = "Backend: stopped";
   } else {
     dot.className = "dot bad";
-    text.textContent = "백엔드: 네이티브 호스트 미설치";
+    text.textContent = "Backend: helper not installed";
     hint.innerHTML =
-      "자동 실행을 쓰려면 <code>native-host\\install-host.ps1</code> 을 실행하세요. " +
-      "또는 <code>backend\\start-ciadpi.bat</code> 로 직접 프록시를 켜세요.";
+      "Install the companion app to enable one-click start, " +
+      "or run <code>start-ciadpi.bat</code> to start the proxy manually.";
     hint.classList.remove("hidden");
   }
 }
