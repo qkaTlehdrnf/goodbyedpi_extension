@@ -9,7 +9,7 @@ param([string]$ExtensionId)
 
 # The published Chrome Web Store ID is the SAME for every user. Fill it in once
 # after your first upload to the Developer Dashboard, then everyone can install.
-$StoreExtensionId = "REPLACE_WITH_STORE_ID"
+$StoreExtensionId = "aiclkdmpdfgaeaibbpeeaaolkmfkmiog"
 
 $ErrorActionPreference = "Stop"
 if ([string]::IsNullOrWhiteSpace($ExtensionId)) { $ExtensionId = $StoreExtensionId }

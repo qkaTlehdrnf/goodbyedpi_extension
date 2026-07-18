@@ -2,11 +2,9 @@
 ; Compile on Windows with Inno Setup (https://jrsoftware.org/isinfo.php)
 ; -> produces installer\Output\GoodbyeDPI-for-Chrome-Setup.exe
 ;
-; BEFORE COMPILING: set MyStoreId to your published Chrome Web Store extension ID.
-
 #define MyAppName "GoodbyeDPI for Chrome"
 #define MyAppVersion "1.0.0"
-#define MyStoreId "REPLACE_WITH_STORE_ID"
+#define MyStoreId "aiclkdmpdfgaeaibbpeeaaolkmfkmiog"
 
 [Setup]
 AppName={#MyAppName}

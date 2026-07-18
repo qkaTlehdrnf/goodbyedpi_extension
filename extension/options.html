@@ -75,9 +75,9 @@
       <div class="field">
         <label class="check">
           <input type="checkbox" id="autostart" />
-          Start/stop ciadpi.exe automatically via the companion app
+          Start/stop the local proxy automatically via the companion app
         </label>
-        <div class="desc">When unchecked, the extension only changes the proxy setting; start ciadpi yourself (<code>start-ciadpi.bat</code>).</div>
+        <div class="desc">Checked (recommended): install the companion app once, then the toggle launches and stops ciadpi for you. Unchecked (manual): the extension only sets the proxy — you start ciadpi yourself (Windows <code>ciadpi.exe -i 127.0.0.1 -p 1080 …</code>, macOS/Linux <code>./ciadpi -i 127.0.0.1 -p 1080 …</code>). If the proxy isn't running when you toggle on, the popup shows install options instead of breaking your connection.</div>
       </div>
 
       <div class="actions">

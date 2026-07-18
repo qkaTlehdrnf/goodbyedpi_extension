@@ -4,6 +4,11 @@
 
 const NATIVE_HOST = "com.goodbyedpi.chrome";
 
+// Liveness probe target: a benign endpoint that returns 204. We fetch it in
+// no-cors mode, so the request resolves whenever the connection succeeds and
+// rejects when nothing is listening on the proxy port.
+const PROBE_URL = "https://www.gstatic.com/generate_204";
+
 const DEFAULTS = {
   enabled: false,
   host: "127.0.0.1",
@@ -68,6 +73,29 @@ function clearProxy() {
   });
 }
 
+// True if the just-applied proxy actually forwards traffic. Used in manual
+// mode, where no native host is available to report ciadpi's status.
+function proxyReachable() {
+  return new Promise((resolve) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 4000);
+    fetch(PROBE_URL, { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
+      .then(() => resolve(true))
+      .catch(() => resolve(false))
+      .finally(() => clearTimeout(t));
+  });
+}
+
+function getPlatformOs() {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.getPlatformInfo((info) => resolve((info && info.os) || ""));
+    } catch (e) {
+      resolve("");
+    }
+  });
+}
+
 // ---- Native host (manages ciadpi.exe) ------------------------------------
 
 function nativeSend(message) {
@@ -105,13 +133,52 @@ function setBadge(on) {
 
 // ---- Enable / disable ----------------------------------------------------
 
-async function enable() {
-  const s = await setSettings({ enabled: true });
-  let backend = { ok: true, skipped: true };
-  if (s.autostart) backend = await startBackend(s);
+// Bring the proxy up only when a working backend is confirmed, so a missing or
+// dead ciadpi never silently breaks Chrome's connectivity. Returns
+// { ok, reason?, hostInstalled?, ... } describing what happened.
+async function ensureBackendAndProxy(s) {
+  const host = await backendStatus();
+  const hostInstalled = !!(host && host.ok);
+
+  if (s.autostart) {
+    // Automatic mode relies on the native host to launch ciadpi.
+    if (!hostInstalled) {
+      return { ok: false, reason: "host-missing", hostInstalled: false };
+    }
+    let running = !!host.running;
+    if (!running) {
+      const started = await startBackend(s);
+      running = !!(started && started.ok && started.running);
+      if (!running) {
+        return { ok: false, reason: "start-failed", hostInstalled: true, detail: started };
+      }
+    }
+    await applyProxy(s);
+    return { ok: true, hostInstalled: true, running: true };
+  }
+
+  // Manual mode: the user starts ciadpi themselves. Apply the proxy, then
+  // verify it forwards traffic; if not, roll back so the browser stays usable.
   await applyProxy(s);
+  const reachable = await proxyReachable();
+  if (!reachable) {
+    await clearProxy();
+    return { ok: false, reason: "proxy-unreachable", hostInstalled, manual: true };
+  }
+  return { ok: true, manual: true, running: true, hostInstalled };
+}
+
+async function enable() {
+  await setSettings({ enabled: true });
+  const s = await getSettings();
+  const r = await ensureBackendAndProxy(s);
+  if (!r.ok) {
+    await setSettings({ enabled: false }); // toggle snaps back — nothing is protecting the user
+    setBadge(false);
+    return { enabled: false, ...r };
+  }
   setBadge(true);
-  return { enabled: true, backend };
+  return { enabled: true, ...r };
 }
 
 async function disable() {
@@ -127,8 +194,12 @@ async function disable() {
 async function reapply() {
   const s = await getSettings();
   if (!s.enabled) return;
-  if (s.autostart) await startBackend(s);
-  await applyProxy(s);
+  const r = await ensureBackendAndProxy(s);
+  if (!r.ok) {
+    await setSettings({ enabled: false });
+    setBadge(false);
+    return;
+  }
   setBadge(true);
 }
 
@@ -157,7 +228,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         case "getState": {
           const s = await getSettings();
           const backend = await backendStatus();
-          sendResponse({ ok: true, settings: s, backend });
+          const platform = await getPlatformOs();
+          sendResponse({ ok: true, settings: s, backend, platform });
           break;
         }
         case "toggle": {
@@ -168,8 +240,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         case "saveSettings": {
           const s = await setSettings(msg.patch);
           if (s.enabled) {
-            if (s.autostart) await startBackend(s); // restart with new args
-            await applyProxy(s);
+            const r = await ensureBackendAndProxy(s); // re-apply with new args, guarded
+            if (!r.ok) {
+              await setSettings({ enabled: false });
+              setBadge(false);
+              sendResponse({ ok: true, settings: { ...s, enabled: false }, backendResult: r });
+              break;
+            }
+            setBadge(true);
           }
           sendResponse({ ok: true, settings: s });
           break;

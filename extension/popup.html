@@ -29,9 +29,33 @@
 
       <div id="hint" class="hint hidden"></div>
 
+      <div id="install" class="install hidden">
+        <div class="install-title" id="installTitle">Backend not running</div>
+        <p class="install-sub" id="installSub">
+          Chrome's traffic is not being routed until the local proxy runs. Pick one:
+        </p>
+
+        <div class="opt">
+          <div class="opt-h">① Permanent install <span class="rec">recommended</span></div>
+          <div class="opt-d" id="permDesc">Install once. After that the toggle starts it automatically and it survives reboots.</div>
+          <a id="permBtn" class="btn hidden" href="#" target="_blank" rel="noopener">Get the installer</a>
+          <div id="permCmdWrap" class="cmd hidden"><code id="permCmd"></code><button id="copyPerm" type="button">Copy</button></div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-h">② Run once (this session)</div>
+          <div class="opt-d" id="manualDesc">Paste this into a terminal and keep the window open:</div>
+          <div class="cmd"><code id="cmdText"></code><button id="copyCmd" type="button">Copy</button></div>
+          <a id="manualSwitch" class="link" href="#">Use this mode (turn off auto-start)</a>
+        </div>
+      </div>
+
       <div class="footer">
         <span id="endpoint">127.0.0.1:1080</span>
-        <a id="openOptions" href="#">Settings</a>
+        <span class="footer-links">
+          <a id="showInstall" href="#">Install</a>
+          <a id="openOptions" href="#">Settings</a>
+        </span>
       </div>
     </div>
     <script src="popup.js"></script>
