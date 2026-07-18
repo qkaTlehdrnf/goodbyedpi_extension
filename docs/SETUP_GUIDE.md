@@ -6,7 +6,7 @@
 
 ---
 
-## macOS (권장 흐름: 한 줄 영구 설치)
+## macOS — 한 줄 영구 설치
 
 ### 1단계 — 토글을 켜면 설치 안내가 뜬다
 
@@ -34,16 +34,6 @@ Chrome 은 시작할 때만 네이티브 호스트 등록을 읽으므로, **Cmd
 **Proxy / Backend 두 점이 모두 초록**이면 성공입니다. 재부팅해도 다시 설치할 필요가 없습니다.
 
 ![4단계 — 토글 ON](screenshots/mac-3-toggle-on.png)
-
----
-
-## 옵션 ② — 등록 없이 이번 세션만
-
-설치(등록)를 원치 않으면 안내 패널의 ② 명령을 터미널에서 직접 실행하고
-"Use this mode (turn off auto-start)" 를 누릅니다. 백엔드 상태가 **manual mode(주황)** 로 표시되며,
-터미널 창을 열어둔 동안만 동작합니다.
-
-![옵션 ② — 수동 모드](screenshots/mac-option2-manual-mode.png)
 
 ---
 

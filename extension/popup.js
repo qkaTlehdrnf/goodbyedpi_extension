@@ -6,9 +6,17 @@ const WIN_INSTALLER =
   REPO + "/releases/latest/download/GoodbyeDPI-for-Chrome-Setup.exe";
 // One-line permanent installer for macOS/Linux — the user pastes this, never
 // has to open a GitHub page. The URL inside it fetches the install script.
-const MAC_INSTALL_CMD =
+const MAC_INSTALL_BASE =
   "curl -fsSL https://raw.githubusercontent.com/qkaTlehdrnf/" +
   "goodbyedpi_extension/master/native-host/mac-install.sh | sh";
+
+// Bake THIS extension's own id into the command, so the native host is
+// registered for whatever build is actually running — the Web Store build or
+// an unpacked/dev load. The user copies and pastes once; no id to look up.
+function macInstallCmd() {
+  const id = (chrome.runtime && chrome.runtime.id) || "";
+  return id ? MAC_INSTALL_BASE + " -s -- " + id : MAC_INSTALL_BASE;
+}
 
 // Latest state, so the install panel can build a command from live settings.
 let state = { settings: null, platform: "" };
@@ -25,16 +33,6 @@ function isWindows() {
 // on macOS/Linux (no GitHub page to visit).
 function installerUrl() {
   return WIN_INSTALLER;
-}
-
-// One-time command to launch the local proxy for this session only.
-function manualCommand() {
-  const s = state.settings || {};
-  const host = s.host || "127.0.0.1";
-  const port = s.port || 1080;
-  const args = (s.args || "").trim();
-  const bin = isWindows() ? "ciadpi.exe" : "./ciadpi";
-  return [bin, "-i", host, "-p", String(port), args].filter(Boolean).join(" ");
 }
 
 function renderProxy(on) {
@@ -92,17 +90,12 @@ function fillInstallPanel(reason) {
       "Install once. The toggle then starts it automatically and it survives reboots.";
   } else {
     // macOS/Linux: one-line copy-paste command, no GitHub page to open.
-    $("permCmd").textContent = MAC_INSTALL_CMD;
+    $("permCmd").textContent = macInstallCmd();
     permCmdWrap.classList.remove("hidden");
     permBtn.classList.add("hidden");
     $("permDesc").textContent =
       "Paste this once into Terminal. Installs and registers everything; survives reboots.";
   }
-
-  $("manualDesc").textContent = isWindows()
-    ? "Run this in Command Prompt and keep the window open:"
-    : "Already have ciadpi? Run it just for this session:";
-  $("cmdText").textContent = manualCommand();
 }
 
 function showInstall(reason) {
@@ -161,24 +154,7 @@ async function copyToButton(text, btn) {
   }
 }
 
-$("copyCmd").addEventListener("click", () => copyToButton(manualCommand(), $("copyCmd")));
-$("copyPerm").addEventListener("click", () => copyToButton(MAC_INSTALL_CMD, $("copyPerm")));
-
-$("manualSwitch").addEventListener("click", async (e) => {
-  e.preventDefault();
-  // Switch to manual mode so the extension only sets the proxy and never tries
-  // to reach a native host that may not be installed.
-  await send({ type: "saveSettings", patch: { autostart: false } });
-  if (state.settings) state.settings.autostart = false;
-  const res = await send({ type: "toggle", enabled: true });
-  if (res && res.ok) {
-    renderProxy(res.enabled);
-    if (!res.enabled && res.reason) showInstall(res.reason);
-    else hideInstall();
-  }
-  const st = await send({ type: "getState" });
-  if (st && st.ok) renderBackend(st.backend, st.settings.autostart);
-});
+$("copyPerm").addEventListener("click", () => copyToButton(macInstallCmd(), $("copyPerm")));
 
 $("showInstall").addEventListener("click", (e) => {
   e.preventDefault();

@@ -1,4 +1,4 @@
-# /ㅠGoodbyeDPI for Chrome
+# GoodbyeDPI for Chrome
 
 Chrome **한 곳에서만** DPI(심층 패킷 검사) 우회를 켜고 끄는 확장 프로그램입니다.
 켜면 **Chrome 트래픽만** 로컬 우회 프록시로 흐르고, 다른 앱(다른 브라우저·게임·Windows 자체)은 전혀 영향을 받지 않습니다.
@@ -91,7 +91,14 @@ curl -fsSL https://raw.githubusercontent.com/qkaTlehdrnf/goodbyedpi_extension/ma
 
 그다음 **Chrome 을 완전히 종료(Cmd+Q) 후 재실행** → 토글 ON. 빌드 도구가 없으면 macOS 에서 `xcode-select --install` 를 한 번 실행하세요.
 
-> 개발용(압축해제 로드) 확장은 ID 가 달라 위 한 줄로는 안 됩니다. 아래 수동 절차에서 `./install-host.sh <확장-ID>` 로 그 ID 를 넘기세요.
+> 개발용(압축해제 로드) 확장은 ID 가 스토어판과 달라서, 그 ID 를 함께 넘겨야 합니다.
+> `chrome://extensions` 카드에 표시된 ID 를 뒤에 붙이세요:
+>
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/qkaTlehdrnf/goodbyedpi_extension/master/native-host/mac-install.sh | sh -s -- <확장-ID>
+> ```
+>
+> (아래 수동 절차의 `./install-host.sh <확장-ID>` 와 같은 역할입니다.)
 
 ### 수동 설치 (개발용 / 세부 제어)
 
@@ -130,16 +137,6 @@ curl -fsSL https://raw.githubusercontent.com/qkaTlehdrnf/goodbyedpi_extension/ma
 #### 4) 사용
 
 툴바 아이콘 → 토글 ON. 확장이 `ciadpi` 를 자동 실행/종료하고 Chrome 트래픽만 프록시로 보냅니다.
-
-### 이번 세션만 (등록 없이)
-
-`native-host` 등록을 건너뛰고 터미널에서 직접 띄워도 됩니다. 창을 열어둔 동안만 동작합니다:
-
-```bash
-./ciadpi -i 127.0.0.1 -p 1080 -s 1 -d 3+s --mod-http=h,d --auto=torst -r 1+s
-```
-
-그리고 확장 **설정**에서 "자동 실행" 을 끄고 토글 ON. (팝업의 안내 패널에서 이 명령을 복사할 수도 있습니다.)
 
 ### 제거 (macOS / Linux)
 

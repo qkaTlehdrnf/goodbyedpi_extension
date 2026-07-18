@@ -6,12 +6,19 @@
 #
 # Run it with a single copy-paste (the extension popup shows this command):
 #   curl -fsSL https://raw.githubusercontent.com/qkaTlehdrnf/goodbyedpi_extension/master/native-host/mac-install.sh | sh
+#
+# Loading the extension unpacked (chrome://extensions -> Load unpacked) gives it
+# a different ID than the Web Store build. Pass that ID so the native host will
+# accept it too:
+#   curl -fsSL .../mac-install.sh | sh -s -- <your-unpacked-extension-id>
 
 set -e
 
 REPO_RAW="https://raw.githubusercontent.com/qkaTlehdrnf/goodbyedpi_extension/master"
 STORE_ID="aiclkdmpdfgaeaibbpeeaaolkmfkmiog"
 HOST_NAME="com.goodbyedpi.chrome"
+# Optional extra extension ID (e.g. an unpacked/dev load) to also allow.
+EXTRA_ID="$1"
 
 case "$(uname -s)" in
   Darwin)
@@ -62,13 +69,24 @@ fi
 
 # 3) Register the native messaging host with Chrome (permanent).
 echo "==> Registering native messaging host..."
+# Always trust the Web Store build; also trust an unpacked/dev ID when given.
+# The popup passes the running extension's own id, which for Store users equals
+# STORE_ID — so skip it when identical to avoid a duplicate origin.
+ORIGINS="    \"chrome-extension://$STORE_ID/\""
+if [ -n "$EXTRA_ID" ] && [ "$EXTRA_ID" != "$STORE_ID" ]; then
+  ORIGINS="$ORIGINS,
+    \"chrome-extension://$EXTRA_ID/\""
+  echo "==> Also allowing unpacked extension: $EXTRA_ID"
+fi
 cat > "$HOST_DIR/$HOST_NAME.json" <<EOF
 {
   "name": "$HOST_NAME",
   "description": "GoodbyeDPI for Chrome native host",
   "path": "$APP_DIR/dpi_host.sh",
   "type": "stdio",
-  "allowed_origins": [ "chrome-extension://$STORE_ID/" ]
+  "allowed_origins": [
+$ORIGINS
+  ]
 }
 EOF
 
