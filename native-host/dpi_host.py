@@ -6,7 +6,7 @@ file instead:  python "%~dp0dpi_host.py"
 
 Protocol (Chrome native messaging): 4-byte little-endian length + UTF-8 JSON.
 """
-import sys, os, json, struct, shlex, subprocess, time
+import sys, os, json, struct, shlex, subprocess, time, signal
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(BASE, "ciadpi.pid")
@@ -97,11 +97,24 @@ def kill(pid):
         subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                        creationflags=0x08000000)
-    else:
+        return
+    # ciadpi ignores SIGTERM on macOS/Linux, so a plain TERM leaves the proxy
+    # bound to the port and the next start fails with "Address already in use".
+    # Send TERM first (graceful), then escalate to KILL if it's still alive.
+    try:
+        os.kill(int(pid), signal.SIGTERM)
+    except OSError:
+        return
+    for _ in range(5):
+        time.sleep(0.1)
         try:
-            os.kill(int(pid), 15)
+            os.kill(int(pid), 0)
         except OSError:
-            pass
+            return  # exited
+    try:
+        os.kill(int(pid), signal.SIGKILL)
+    except OSError:
+        pass
 
 
 def reap_orphans(exe):
@@ -116,8 +129,9 @@ def reap_orphans(exe):
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                        creationflags=0x08000000)
         return
+    # SIGTERM (pkill default) is ignored by ciadpi, so force-kill by binary path.
     try:
-        subprocess.run(["pkill", "-f", exe],
+        subprocess.run(["pkill", "-9", "-f", exe],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError:
         pass  # pkill absent — best effort
