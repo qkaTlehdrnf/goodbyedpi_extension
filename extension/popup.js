@@ -70,8 +70,37 @@ function renderBackend(backend, autostart) {
 const REASON_TEXT = {
   "host-missing": "The companion app isn't installed, so the proxy can't start.",
   "start-failed": "The companion app is installed but ciadpi failed to launch.",
+  "proxy-set-failed": "Chrome refused to apply the proxy setting.",
   "proxy-unreachable": "Nothing is answering on the proxy port — the proxy isn't running.",
 };
+
+// Show the raw failure detail so a stuck user can see (and copy) exactly why the
+// toggle refused to turn on, instead of guessing. Mirrors the background log.
+function showDiag(res) {
+  const diag = $("diag");
+  if (!res || res.ok) {
+    diag.classList.add("hidden");
+    return;
+  }
+  const lines = ["reason: " + (res.reason || "unknown")];
+  if (res.hostInstalled != null) lines.push("hostInstalled: " + res.hostInstalled);
+  if (res.detail !== undefined) {
+    let d;
+    try {
+      d = typeof res.detail === "string" ? res.detail : JSON.stringify(res.detail);
+    } catch (e) {
+      d = String(res.detail);
+    }
+    lines.push("detail: " + d);
+  }
+  if (res.error) lines.push("error: " + res.error);
+  $("diagText").textContent = lines.join("\n");
+  diag.classList.remove("hidden");
+}
+
+function hideDiag() {
+  $("diag").classList.add("hidden");
+}
 
 function fillInstallPanel(reason) {
   $("installSub").textContent =
@@ -122,6 +151,7 @@ async function refresh() {
     showInstall("host-missing");
   } else {
     hideInstall();
+    hideDiag();
   }
 }
 
@@ -130,15 +160,25 @@ toggle.addEventListener("click", async () => {
   toggle.disabled = true;
   const res = await send({ type: "toggle", enabled: turningOn });
   toggle.disabled = false;
-  if (!res || !res.ok) return;
+  // Always log the raw result — with the SW console open this shows exactly what
+  // the background reported when the toggle wouldn't turn on.
+  console.log("[GoodbyeDPI] toggle ->", res);
+  if (!res || !res.ok) {
+    // The message itself failed (SW error). Surface it so it isn't a silent no-op.
+    showInstall();
+    showDiag(res || { reason: "no-response", error: "background did not respond" });
+    return;
+  }
 
   renderProxy(res.enabled);
-  if (turningOn && !res.enabled && res.reason) {
+  if (turningOn && !res.enabled) {
     // Enable was refused because the backend isn't available — don't break the
-    // internet, guide the user to install or run it instead.
+    // internet, guide the user to install or run it, and show why it refused.
     showInstall(res.reason);
+    showDiag(res);
   } else {
     hideInstall();
+    hideDiag();
   }
   const st = await send({ type: "getState" });
   if (st && st.ok) renderBackend(st.backend, st.settings.autostart);
@@ -156,11 +196,18 @@ async function copyToButton(text, btn) {
 
 $("copyPerm").addEventListener("click", () => copyToButton(macInstallCmd(), $("copyPerm")));
 
+$("copyDiag").addEventListener("click", () =>
+  copyToButton($("diagText").textContent, $("copyDiag"))
+);
+
 $("showInstall").addEventListener("click", (e) => {
   e.preventDefault();
   const panel = $("install");
   if (panel.classList.contains("hidden")) showInstall();
-  else hideInstall();
+  else {
+    hideInstall();
+    hideDiag();
+  }
 });
 
 $("openOptions").addEventListener("click", (e) => {

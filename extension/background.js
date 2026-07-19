@@ -4,6 +4,16 @@
 
 const NATIVE_HOST = "com.goodbyedpi.chrome";
 
+// Diagnostic logging — visible in the service worker console
+// (chrome://extensions -> this extension -> "service worker" -> Inspect).
+function log(...a) {
+  try {
+    console.log("[GoodbyeDPI]", ...a);
+  } catch (e) {
+    /* console unavailable */
+  }
+}
+
 // Liveness probe target: a benign endpoint that returns 204. We fetch it in
 // no-cors mode, so the request resolves whenever the connection succeeds and
 // rejects when nothing is listening on the proxy port.
@@ -139,21 +149,31 @@ function setBadge(on) {
 async function ensureBackendAndProxy(s) {
   const host = await backendStatus();
   const hostInstalled = !!(host && host.ok);
+  log("enable: autostart=", s.autostart, "native status ->", host);
 
   if (s.autostart) {
     // Automatic mode relies on the native host to launch ciadpi.
     if (!hostInstalled) {
-      return { ok: false, reason: "host-missing", hostInstalled: false };
+      log("FAIL host-missing: native host did not answer.", host && host.error);
+      return { ok: false, reason: "host-missing", hostInstalled: false, detail: host };
     }
     let running = !!host.running;
     if (!running) {
       const started = await startBackend(s);
+      log("started ciadpi ->", started);
       running = !!(started && started.ok && started.running);
       if (!running) {
+        log("FAIL start-failed:", started && started.error);
         return { ok: false, reason: "start-failed", hostInstalled: true, detail: started };
       }
     }
-    await applyProxy(s);
+    try {
+      await applyProxy(s);
+    } catch (e) {
+      log("FAIL proxy-set threw:", e);
+      return { ok: false, reason: "proxy-set-failed", hostInstalled: true, detail: String(e) };
+    }
+    log("OK: backend running, proxy applied (Chrome only).");
     return { ok: true, hostInstalled: true, running: true };
   }
 
@@ -163,8 +183,10 @@ async function ensureBackendAndProxy(s) {
   const reachable = await proxyReachable();
   if (!reachable) {
     await clearProxy();
+    log("FAIL proxy-unreachable: nothing answering on", s.host + ":" + s.port);
     return { ok: false, reason: "proxy-unreachable", hostInstalled, manual: true };
   }
+  log("OK (manual): proxy reachable.");
   return { ok: true, manual: true, running: true, hostInstalled };
 }
 

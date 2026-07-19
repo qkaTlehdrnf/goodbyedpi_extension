@@ -107,6 +107,26 @@ body {
 .link { font-size: 11px; color: #60a5fa; text-decoration: none; }
 .link:hover { text-decoration: underline; }
 
+.diag {
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155;
+}
+.diag.hidden { display: none; }
+.diag-h {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11.5px; font-weight: 600; color: #fca5a5; margin-bottom: 6px;
+}
+.diag-h button {
+  background: #334155; color: #e2e8f0; border: none; border-radius: 6px;
+  padding: 2px 8px; font-size: 10.5px; font-weight: 600; cursor: pointer;
+}
+.diag-h button:hover { background: #475569; }
+.diag pre {
+  margin: 0; background: #0f172a; border: 1px solid #7f1d1d; border-radius: 7px;
+  padding: 8px; font-size: 10px; line-height: 1.5; color: #fca5a5;
+  white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow: auto;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
 .footer {
   margin-top: 14px;
   display: flex;
