@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GoodbyeDPI for Chrome",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Route only Chrome's traffic through a local DPI-bypass proxy (ByeDPI) to defeat censorship. One toggle to turn it on and off.",
   "permissions": ["proxy", "storage", "nativeMessaging"],
   "background": {
