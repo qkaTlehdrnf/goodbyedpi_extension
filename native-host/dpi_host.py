@@ -11,6 +11,7 @@ import sys, os, json, struct, shlex, subprocess, time
 BASE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(BASE, "ciadpi.pid")
 LOG = os.path.join(BASE, "host.log")
+ERRLOG = os.path.join(BASE, "ciadpi.err")  # captured stderr of the last launch
 IS_WIN = os.name == "nt"
 
 
@@ -103,6 +104,25 @@ def kill(pid):
             pass
 
 
+def reap_orphans(exe):
+    """Kill any lingering ciadpi we started earlier but no longer track.
+
+    The common failure is an orphaned instance still bound to the proxy port:
+    the next launch then dies with "bind: Address already in use" (rc 255).
+    We only ever match OUR own binary path, so nothing else is touched.
+    """
+    if IS_WIN:
+        subprocess.run(["taskkill", "/IM", os.path.basename(exe), "/F"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       creationflags=0x08000000)
+        return
+    try:
+        subprocess.run(["pkill", "-f", exe],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError:
+        pass  # pkill absent — best effort
+
+
 def start_ciadpi(user_args, port):
     exe = find_exe()
     if not exe:
@@ -111,22 +131,45 @@ def start_ciadpi(user_args, port):
     if st and is_alive(st.get("pid")):
         kill(st.get("pid"))
         time.sleep(0.3)
+    reap_orphans(exe)   # free the port from any untracked previous launch
+    time.sleep(0.3)
     cmd = [exe, "-i", "127.0.0.1", "-p", str(int(port))] + shlex.split(user_args or "")
+    # Capture stderr so a startup failure (bad arg, port in use, ...) is visible
+    # to the extension instead of a bare exit code.
+    try:
+        errf = open(ERRLOG, "w", encoding="utf-8")
+    except OSError:
+        errf = subprocess.DEVNULL
     if IS_WIN:
         flags = 0x00000008 | 0x00000200 | 0x08000000
         p = subprocess.Popen(cmd, creationflags=flags, close_fds=True,
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, cwd=os.path.dirname(exe))
+                             stderr=errf, cwd=os.path.dirname(exe))
     else:
         p = subprocess.Popen(cmd, start_new_session=True,
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, cwd=os.path.dirname(exe))
+                             stderr=errf, cwd=os.path.dirname(exe))
     time.sleep(0.4)
+    if hasattr(errf, "close"):
+        errf.close()
     if p.poll() is not None:
-        return {"ok": False, "error": "ciadpi exited immediately (rc=%s)" % p.returncode}
+        stderr_tail = read_errlog()
+        log("start failed rc", p.returncode, "cmd", cmd, "stderr", stderr_tail)
+        msg = "ciadpi exited immediately (rc=%s)" % p.returncode
+        if stderr_tail:
+            msg += ": " + stderr_tail
+        return {"ok": False, "error": msg, "rc": p.returncode, "cmd": cmd, "stderr": stderr_tail}
     write_state(p.pid, int(port))
     log("started", exe, "pid", p.pid, "cmd", cmd)
     return {"ok": True, "running": True, "pid": p.pid, "exe": exe}
+
+
+def read_errlog():
+    try:
+        with open(ERRLOG, "r", encoding="utf-8", errors="replace") as f:
+            return f.read().strip()[-500:]
+    except OSError:
+        return ""
 
 
 def stop_ciadpi():
