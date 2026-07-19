@@ -1,0 +1,49 @@
+GoodbyeDPI for Chrome — turn censorship bypass on and off with a single toggle, for THIS browser only.
+
+Many networks use Deep Packet Inspection (DPI) to detect and block websites by looking inside your connections. GoodbyeDPI for Chrome defeats that by routing Chrome's traffic through a small local proxy that reshapes packets so DPI systems can no longer match them — all with one click, and only for Chrome.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHY IT'S DIFFERENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Chrome only. When you turn it ON, only this browser is affected. Other apps, other browsers, and even your other Chrome profiles keep connecting normally.
+• One toggle. No terminal, no manual proxy setup, no fiddling — flip the switch in the popup.
+• It stays out of your way. If the local proxy isn't running, the toggle safely snaps back OFF so your internet never breaks.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HOW IT WORKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Toggle ON — the extension points Chrome at a local proxy running on your own PC (127.0.0.1). Nothing leaves your machine except your normal web traffic to the sites you visit.
+2. DPI bypass — the local proxy (ByeDPI / ciadpi) applies desync techniques such as TLS record splitting, packet reordering, and fake packets that many DPI systems fail to inspect.
+3. Chrome only — because just Chrome is pointed at the proxy, everything else on your computer is untouched.
+
+A browser extension cannot manipulate TCP/TLS packets by itself, so the actual bypass runs in a small local helper app that the extension starts and stops for you.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SETUP (ONE TIME)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Windows: download and run the free companion installer, then reopen Chrome and toggle ON.
+• macOS / Linux: paste one line into the Terminal (shown in the popup), then reopen Chrome and toggle ON.
+
+The companion app is open source and installs the local proxy the extension controls. After that, it's just the toggle — the setup survives reboots and never needs to be repeated.
+
+Download & guide: https://github.com/qkaTlehdrnf/goodbyedpi_extension
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTOMIZE (OPTIONAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Choose a bypass strategy: Light, Recommended, or Strong — the best one varies by ISP and region.
+• Scope: send all sites through the proxy, or only a specific list of domains.
+• Change the local port or fine-tune the proxy arguments if you know what you're doing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRIVACY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• No data is collected, stored, or sent to us — ever.
+• No analytics, no tracking, no ads, no developer-operated servers.
+• Your browsing goes directly from your computer to the sites you visit, processed only by the local proxy on your own machine.
+• The extension stores only your on/off state and settings, locally on your device.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GOOD TO KNOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This is an anti-censorship tool built on the open-source ByeDPI project (MIT license). It does not hide your IP like a VPN — it defeats DPI-based blocking. Please follow the laws and policies that apply where you use it.
