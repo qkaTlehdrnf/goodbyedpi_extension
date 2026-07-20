@@ -20,14 +20,18 @@ HOST_NAME="com.goodbyedpi.chrome"
 # Optional extra extension ID (e.g. an unpacked/dev load) to also allow.
 EXTRA_ID="$1"
 
+RELEASE_DL="https://github.com/qkaTlehdrnf/goodbyedpi_extension/releases/latest/download"
+
 case "$(uname -s)" in
   Darwin)
     APP_DIR="$HOME/Library/Application Support/GoodbyeDPIChrome"
     HOST_DIR="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
+    CIADPI_ASSET="ciadpi-macos"
     ;;
   Linux)
     APP_DIR="$HOME/.local/share/GoodbyeDPIChrome"
     HOST_DIR="$HOME/.config/google-chrome/NativeMessagingHosts"
+    CIADPI_ASSET="ciadpi-linux-x86_64"
     ;;
   *)
     echo "Unsupported OS: $(uname -s)" >&2
@@ -44,16 +48,15 @@ curl -fsSL "$REPO_RAW/native-host/dpi_host.py" -o "$APP_DIR/dpi_host.py"
 curl -fsSL "$REPO_RAW/native-host/dpi_host.sh" -o "$APP_DIR/dpi_host.sh"
 chmod +x "$APP_DIR/dpi_host.sh" "$APP_DIR/dpi_host.py"
 
-# 2) The ciadpi proxy binary (built from source; byedpi ships no *nix binary).
-if [ -f "$APP_DIR/ciadpi" ]; then
-  echo "==> ciadpi already present, keeping it."
-else
+# 2) The ciadpi proxy binary. Prefer the prebuilt release asset (no compiler
+#    needed); fall back to building from source if the download is unavailable.
+build_from_source() {
   missing=""
-  for tool in git make cc python3; do
+  for tool in git make cc; do
     command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
   done
   if [ -n "$missing" ]; then
-    echo "Missing build tools:$missing" >&2
+    echo "Could not download a prebuilt ciadpi, and build tools are missing:$missing" >&2
     echo "On macOS, install them once with:  xcode-select --install" >&2
     exit 1
   fi
@@ -65,6 +68,36 @@ else
   [ -f "$WORK/byedpi/ciadpi" ] || { echo "Build produced no ciadpi binary." >&2; exit 1; }
   cp "$WORK/byedpi/ciadpi" "$APP_DIR/ciadpi"
   chmod +x "$APP_DIR/ciadpi"
+}
+
+# Confirms the binary actually loads and runs on this machine's architecture.
+ciadpi_works() {
+  [ -x "$1" ] || return 1
+  "$1" --definitely-not-a-flag 2>&1 | grep -q "unrecognized option"
+}
+
+if [ -f "$APP_DIR/ciadpi" ]; then
+  echo "==> ciadpi already present, keeping it."
+else
+  echo "==> Downloading prebuilt ciadpi..."
+  if curl -fsSL "$RELEASE_DL/$CIADPI_ASSET" -o "$APP_DIR/ciadpi.tmp" 2>/dev/null; then
+    chmod +x "$APP_DIR/ciadpi.tmp"
+    # curl doesn't set the quarantine flag, but clear it defensively so Gatekeeper
+    # never blocks the unsigned binary.
+    xattr -c "$APP_DIR/ciadpi.tmp" 2>/dev/null || true
+    if ciadpi_works "$APP_DIR/ciadpi.tmp"; then
+      mv "$APP_DIR/ciadpi.tmp" "$APP_DIR/ciadpi"
+      echo "==> Installed prebuilt ciadpi."
+    else
+      echo "==> Prebuilt binary did not run here; building instead."
+      rm -f "$APP_DIR/ciadpi.tmp"
+      build_from_source
+    fi
+  else
+    echo "==> No prebuilt download available; building instead."
+    rm -f "$APP_DIR/ciadpi.tmp"
+    build_from_source
+  fi
 fi
 
 # 3) Register the native messaging host with Chrome (permanent).

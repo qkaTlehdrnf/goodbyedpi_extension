@@ -1,0 +1,138 @@
+name: Build and publish release assets
+
+# The extension links users to prebuilt downloads:
+#   - Windows: releases/latest/download/GoodbyeDPI-for-Chrome-Setup.exe
+#   - macOS:   releases/latest/download/ciadpi-macos        (universal)
+#   - Linux:   releases/latest/download/ciadpi-linux-x86_64
+# Without a published release those URLs 404, so this workflow builds all three
+# and attaches them to a release. Run it from the Actions tab (workflow_dispatch)
+# or by pushing a v* tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create/update"
+        required: true
+        default: "v1.0.1"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  BYEDPI_REPO: https://github.com/hufrea/byedpi
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Build universal ciadpi (arm64 + x86_64)
+        run: |
+          set -eux
+          git clone --depth 1 "$BYEDPI_REPO" byedpi
+          # CFLAGS in byedpi's Makefile uses '+=', so a command-line CFLAGS would
+          # clobber the required -I./-std flags. Put the arch flags in CC instead;
+          # clang then compiles AND links a single universal binary.
+          make -C byedpi CC="cc -arch arm64 -arch x86_64"
+          lipo -info byedpi/ciadpi
+          mkdir -p dist
+          cp byedpi/ciadpi dist/ciadpi-macos
+
+      - name: Smoke-test the binary
+        run: |
+          set -eux
+          chmod +x dist/ciadpi-macos
+          # Bad args exit 254; this proves the binary loads and parses on this arch.
+          dist/ciadpi-macos --definitely-not-a-flag 2>&1 | grep -q "unrecognized option"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ciadpi-macos
+          path: dist/ciadpi-macos
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build ciadpi
+        run: |
+          set -eux
+          git clone --depth 1 "$BYEDPI_REPO" byedpi
+          make -C byedpi
+          mkdir -p dist
+          cp byedpi/ciadpi dist/ciadpi-linux-x86_64
+
+      - name: Smoke-test the binary
+        run: |
+          set -eux
+          chmod +x dist/ciadpi-linux-x86_64
+          dist/ciadpi-linux-x86_64 --definitely-not-a-flag 2>&1 | grep -q "unrecognized option"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ciadpi-linux-x86_64
+          path: dist/ciadpi-linux-x86_64
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+        shell: pwsh
+
+      - name: Compile the installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found at $iscc" }
+          & $iscc "installer\setup.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          if (-not (Test-Path "installer\Output\GoodbyeDPI-for-Chrome-Setup.exe")) {
+            throw "installer was not produced"
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoodbyeDPI-for-Chrome-Setup
+          path: installer/Output/GoodbyeDPI-for-Chrome-Setup.exe
+          if-no-files-found: error
+
+  release:
+    needs: [macos, linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: |
+          set -eux
+          ls -la assets
+          # Recreate the assets on an existing tag so "latest/download" always
+          # points at a fresh build.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" assets/* --clobber
+          else
+            gh release create "$TAG" assets/* \
+              --title "GoodbyeDPI for Chrome $TAG" \
+              --notes "Companion backend downloads for the Chrome extension.
+
+          - \`GoodbyeDPI-for-Chrome-Setup.exe\` — Windows one-click installer
+          - \`ciadpi-macos\` — universal (Apple Silicon + Intel) proxy binary
+          - \`ciadpi-linux-x86_64\` — Linux proxy binary
+
+          \`ciadpi\` is built from [hufrea/byedpi](https://github.com/hufrea/byedpi)."
+          fi

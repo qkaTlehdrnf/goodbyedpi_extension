@@ -78,18 +78,21 @@ powershell -ExecutionPolicy Bypass -File install-host.ps1 -ExtensionId 붙여넣
 
 ## macOS / Linux
 
-`ciadpi` 는 크로스플랫폼 C 코드지만 공식 릴리스는 Windows/Android 바이너리만 제공하므로, 데스크톱 *nix 는 소스에서 빌드합니다.
+`ciadpi` 는 크로스플랫폼 C 코드지만 byedpi 공식 릴리스는 Windows/Android 바이너리만 제공합니다.
+그래서 이 저장소가 macOS(유니버설: Apple Silicon + Intel) · Linux 용 `ciadpi` 를 직접 빌드해 [Releases](https://github.com/qkaTlehdrnf/goodbyedpi_extension/releases/latest) 에 올려둡니다. 설치 스크립트가 이걸 내려받으므로 **컴파일러가 필요 없습니다.**
 단계별 화면과 함께 보려면 → **[설치 단계별 안내 (스크린샷)](docs/SETUP_GUIDE.md)**
 
 ### 가장 간단: 한 줄 설치 (권장)
 
-웹스토어에서 확장을 설치한 뒤, 터미널에 아래 **한 줄**만 붙여넣으면 됩니다. 네이티브 호스트 다운로드 · `ciadpi` 빌드 · 등록까지 자동으로 하고, 재부팅해도 유지됩니다. (확장 팝업의 안내 패널에서 이 명령을 복사할 수도 있습니다.)
+웹스토어에서 확장을 설치한 뒤, 터미널에 아래 **한 줄**만 붙여넣으면 됩니다. 네이티브 호스트 다운로드 · `ciadpi` 내려받기 · 등록까지 자동으로 하고, 재부팅해도 유지됩니다. (확장 팝업의 안내 패널에서 이 명령을 복사할 수도 있습니다.)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/qkaTlehdrnf/goodbyedpi_extension/master/native-host/mac-install.sh | sh
 ```
 
-그다음 **Chrome 을 완전히 종료(Cmd+Q) 후 재실행** → 토글 ON. 빌드 도구가 없으면 macOS 에서 `xcode-select --install` 를 한 번 실행하세요.
+그다음 **Chrome 을 완전히 종료(Cmd+Q) 후 재실행** → 토글 ON.
+
+> 릴리스 바이너리를 못 받는 환경이면 스크립트가 자동으로 소스 빌드로 넘어갑니다. 그때만 macOS 에서 `xcode-select --install` 이 한 번 필요합니다.
 
 > 개발용(압축해제 로드) 확장은 ID 가 스토어판과 달라서, 그 ID 를 함께 넘겨야 합니다.
 > `chrome://extensions` 카드에 표시된 ID 를 뒤에 붙이세요:
