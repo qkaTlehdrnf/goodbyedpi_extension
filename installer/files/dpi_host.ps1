@@ -3,6 +3,8 @@
 # ciadpi.exe (ByeDPI) SOCKS5 proxy. Protocol: 4-byte LE length + UTF-8 JSON.
 
 $ErrorActionPreference = "Stop"
+# Bump on every host change; shown in the extension's error panel.
+$HostVersion = "1.0.1"
 $Base      = Split-Path -Parent $PSCommandPath
 $StateFile = Join-Path $Base "ciadpi.pid"
 $LogFile   = Join-Path $Base "host.log"
@@ -89,15 +91,19 @@ function Invoke-Command2($msg) {
     "start"  { return Start-Ciadpi $msg.args $msg.port }
     "stop"   { return Stop-Ciadpi }
     "status" { return Get-CiadpiStatus }
-    "ping"   { return @{ ok = $true; version = "1.0.0"; exe = (Find-Exe) } }
+    "ping"   { return @{ ok = $true; version = $HostVersion; exe = (Find-Exe) } }
     default  { return @{ ok = $false; error = ("unknown cmd: {0}" -f $msg.cmd) } }
   }
 }
 
 try {
   $msg = Read-Message
-  if ($null -ne $msg) { Send-Message (Invoke-Command2 $msg) }
+  if ($null -ne $msg) {
+    $reply = Invoke-Command2 $msg
+    $reply.hostVersion = $HostVersion
+    Send-Message $reply
+  }
 } catch {
   Log ("ERROR " + $_.Exception.Message)
-  try { Send-Message @{ ok = $false; error = $_.Exception.Message } } catch {}
+  try { Send-Message @{ ok = $false; error = $_.Exception.Message; hostVersion = $HostVersion } } catch {}
 }

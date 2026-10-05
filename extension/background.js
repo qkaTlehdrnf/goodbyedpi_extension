@@ -151,13 +151,17 @@ function setBadge(on) {
 async function ensureBackendAndProxy(s) {
   const host = await backendStatus();
   const hostInstalled = !!(host && host.ok);
-  log("enable: autostart=", s.autostart, "native status ->", host);
+  log("enable: ext", chrome.runtime.getManifest().version,
+      "host", (host && host.hostVersion) || "?", "autostart=", s.autostart,
+      "native status ->", host);
+  // Versions ride along on every result so the popup's error panel shows them.
+  const base = { hostVersion: (host && host.hostVersion) || null };
 
   if (s.autostart) {
     // Automatic mode relies on the native host to launch ciadpi.
     if (!hostInstalled) {
       log("FAIL host-missing: native host did not answer.", host && host.error);
-      return { ok: false, reason: "host-missing", hostInstalled: false, detail: host };
+      return { ...base, ok: false, reason: "host-missing", hostInstalled: false, detail: host };
     }
     let running = !!host.running;
     // The host may run ciadpi on a different port than configured (fallback
@@ -169,7 +173,7 @@ async function ensureBackendAndProxy(s) {
       running = !!(started && started.ok && started.running);
       if (!running) {
         log("FAIL start-failed:", started && started.error);
-        return { ok: false, reason: "start-failed", hostInstalled: true, detail: started };
+        return { ...base, ok: false, reason: "start-failed", hostInstalled: true, detail: started };
       }
       port = started.port;
     }
@@ -179,10 +183,10 @@ async function ensureBackendAndProxy(s) {
       await applyProxy(live);
     } catch (e) {
       log("FAIL proxy-set threw:", e);
-      return { ok: false, reason: "proxy-set-failed", hostInstalled: true, detail: String(e) };
+      return { ...base, ok: false, reason: "proxy-set-failed", hostInstalled: true, detail: String(e) };
     }
     log("OK: backend running, proxy applied (Chrome only).");
-    return { ok: true, hostInstalled: true, running: true, port: Number(live.port) };
+    return { ...base, ok: true, hostInstalled: true, running: true, port: Number(live.port) };
   }
 
   // Manual mode: the user starts ciadpi themselves. Apply the proxy, then
@@ -192,10 +196,10 @@ async function ensureBackendAndProxy(s) {
   if (!reachable) {
     await clearProxy();
     log("FAIL proxy-unreachable: nothing answering on", s.host + ":" + s.port);
-    return { ok: false, reason: "proxy-unreachable", hostInstalled, manual: true };
+    return { ...base, ok: false, reason: "proxy-unreachable", hostInstalled, manual: true };
   }
   log("OK (manual): proxy reachable.");
-  return { ok: true, manual: true, running: true, hostInstalled };
+  return { ...base, ok: true, manual: true, running: true, hostInstalled };
 }
 
 async function enable() {

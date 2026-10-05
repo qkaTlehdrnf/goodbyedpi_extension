@@ -94,6 +94,10 @@ function showDiag(res) {
     lines.push("detail: " + d);
   }
   if (res.error) lines.push("error: " + res.error);
+  // Versions + OS so a pasted report pins down exactly what was running.
+  lines.push("extension: " + chrome.runtime.getManifest().version);
+  lines.push("host: " + (res.hostVersion || (res.hostInstalled ? "unknown (older than 1.1.0)" : "not installed")));
+  lines.push("os: " + (state.platform || "unknown"));
   $("diagText").textContent = lines.join("\n");
   diag.classList.remove("hidden");
 }

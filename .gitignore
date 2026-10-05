@@ -11,3 +11,6 @@ backend/ciadpi.exe
 # build / packaging output
 installer/Output/
 *.zip
+
+# python bytecode
+__pycache__/

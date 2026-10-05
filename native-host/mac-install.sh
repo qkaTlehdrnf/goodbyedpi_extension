@@ -123,6 +123,9 @@ $ORIGINS
 }
 EOF
 
+HOST_VER="$(sed -n 's/^HOST_VERSION = "\(.*\)"/\1/p' "$APP_DIR/dpi_host.py")"
+echo "==> Host version: ${HOST_VER:-unknown}"
+
 echo ""
 echo "Done. Now fully quit Chrome (Cmd+Q), reopen it, and toggle the extension ON."
 echo "To remove later:  rm -rf \"$APP_DIR\" \"$HOST_DIR/$HOST_NAME.json\""

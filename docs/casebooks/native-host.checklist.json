@@ -13,5 +13,12 @@
     "cases": [
       "nh-003"
     ]
+  },
+  {
+    "id": "nh-version-bump",
+    "rule": "Bump HOST_VERSION (dpi_host.py / $HostVersion in both dpi_host.ps1 copies) on every host change, and manifest version on every extension change, so the popup's error panel identifies exactly what ran.",
+    "cases": [
+      "nh-001"
+    ]
   }
 ]

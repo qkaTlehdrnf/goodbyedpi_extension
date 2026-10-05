@@ -8,6 +8,10 @@ Protocol (Chrome native messaging): 4-byte little-endian length + UTF-8 JSON.
 """
 import sys, os, json, struct, shlex, socket, subprocess, time, signal
 
+# Bump on every host change; shown in the extension's error panel and by the
+# installer so a bug report says exactly which host was running.
+HOST_VERSION = "1.1.0"
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(BASE, "ciadpi.pid")
 LOG = os.path.join(BASE, "host.log")
@@ -305,7 +309,7 @@ def handle(msg):
     if cmd == "status":
         return status()
     if cmd == "ping":
-        return {"ok": True, "version": "1.0.0", "exe": find_exe()}
+        return {"ok": True, "version": HOST_VERSION, "exe": find_exe()}
     return {"ok": False, "error": "unknown cmd: %s" % cmd}
 
 
@@ -314,11 +318,13 @@ def main():
         msg = read_message()
         if msg is None:
             return
-        send_message(handle(msg))
+        reply = handle(msg)
+        reply["hostVersion"] = HOST_VERSION
+        send_message(reply)
     except Exception as e:  # noqa: BLE001
         log("ERROR", repr(e))
         try:
-            send_message({"ok": False, "error": str(e)})
+            send_message({"ok": False, "error": str(e), "hostVersion": HOST_VERSION})
         except Exception:
             pass
 
