@@ -6,5 +6,13 @@
     "cause": "reap_orphans() only pkills ciadpi at OUR install path. Port 1080 was held by a process it never matches (a ciadpi from another path, or an unrelated proxy). ciadpi is detached (start_new_session), so quitting Chrome never frees the port.",
     "fix": "free_port(): lsof the listener on the port before launch; kill any ciadpi regardless of path, otherwise return an error naming the process and pid.",
     "rule": "nh-check-port-owner"
+  },
+  {
+    "id": "nh-002",
+    "date": "2026-10-06",
+    "symptom": "nh-001 on macOS: lsof showed port 1080 held by 'Code Helper' (VS Code), not ciadpi.",
+    "cause": "VS Code Remote-SSH auto-forwarded remote port 1080 (a ciadpi run on the remote Linux dev box) to the Mac's 127.0.0.1:1080 and kept the forward bound.",
+    "fix": "Stop the forward in VS Code's Ports panel or set remote.autoForwardPorts=false; the host now names the owner and adds a VS Code hint.",
+    "rule": "nh-check-port-owner"
   }
 ]

@@ -182,8 +182,14 @@ def free_port(port):
             continue
         break
     others = ", ".join("%s (pid %d)" % (c, p) for p, c in holders)
-    return ("port %d is already in use by %s. Quit that program, or change the "
-            "port in the extension options." % (int(port), others))
+    msg = ("port %d is already in use by %s. Quit that program, or change the "
+           "port in the extension options." % (int(port), others))
+    if any(c.startswith("Code") for _, c in holders):
+        # VS Code Remote auto-forwards ports it sees on the remote host and
+        # keeps them bound locally, which silently steals 1080.
+        msg += (" (VS Code: stop forwarding port %d in the Ports panel, or set "
+                "\"remote.autoForwardPorts\": false.)" % int(port))
+    return msg
 
 
 def start_ciadpi(user_args, port):

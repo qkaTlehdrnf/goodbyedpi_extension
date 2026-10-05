@@ -2,6 +2,9 @@
   {
     "id": "nh-check-port-owner",
     "rule": "Before launching the proxy, identify who holds the port (not just processes we spawned). Free it only if it is ciadpi; otherwise report the owner by name and pid instead of a bare bind error.",
-    "cases": ["nh-001"]
+    "cases": [
+      "nh-001",
+      "nh-002"
+    ]
   }
 ]
