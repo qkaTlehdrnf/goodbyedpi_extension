@@ -6,5 +6,12 @@
       "nh-001",
       "nh-002"
     ]
+  },
+  {
+    "id": "nh-self-heal-port",
+    "rule": "Recover from environment conflicts automatically instead of asking the user to fix them. When changing the host/extension protocol, gate new behaviour behind a flag the new extension sends, so already-installed extension versions never get a reply they misinterpret.",
+    "cases": [
+      "nh-003"
+    ]
   }
 ]

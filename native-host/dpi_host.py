@@ -6,7 +6,7 @@ file instead:  python "%~dp0dpi_host.py"
 
 Protocol (Chrome native messaging): 4-byte little-endian length + UTF-8 JSON.
 """
-import sys, os, json, struct, shlex, subprocess, time, signal
+import sys, os, json, struct, shlex, socket, subprocess, time, signal
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(BASE, "ciadpi.pid")
@@ -159,29 +159,50 @@ def port_listeners(port):
     return found
 
 
+def can_bind(port):
+    """True if 127.0.0.1:<port> is free for ciadpi to listen on."""
+    t = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        t.bind(("127.0.0.1", int(port)))
+        return True
+    except OSError:
+        return False
+    finally:
+        t.close()
+
+
+def pick_free_port(preferred):
+    """A free port near <preferred> (so it stays recognisable), else any."""
+    for p in range(int(preferred) + 1, min(int(preferred) + 50, 65535)):
+        if can_bind(p):
+            return p
+    t = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        t.bind(("127.0.0.1", 0))
+        return t.getsockname()[1]
+    finally:
+        t.close()
+
+
 def free_port(port):
     """Make sure the proxy port is free before launching.
 
     reap_orphans() only matches our own binary path, so a ciadpi started from
     another location (a manual build, an older install) still holds the port.
-    Any ciadpi there is a leftover proxy of the same kind, so it's safe to kill;
-    anything else is reported so the user can quit it or pick another port.
-    Returns an error string, or None when the port is free.
+    Any ciadpi there is a leftover proxy of the same kind, so it's safe to kill.
+    Anything else (e.g. VS Code Remote forwarding 1080) is left alone.
+    Returns an error string naming the holder, or None when the port is free.
     """
-    holders = port_listeners(port)
-    for pid, comm in holders:
+    for pid, comm in port_listeners(port):
         if os.path.basename(comm).startswith("ciadpi"):
             log("killing foreign ciadpi on port", port, "pid", pid)
             kill(pid)
     for _ in range(10):
-        holders = port_listeners(port)
-        if not holders:
+        if can_bind(port):
             return None
-        if all(os.path.basename(c).startswith("ciadpi") for _, c in holders):
-            time.sleep(0.2)  # still dying
-            continue
-        break
-    others = ", ".join("%s (pid %d)" % (c, p) for p, c in holders)
+        time.sleep(0.2)  # a killed ciadpi may still be releasing the socket
+    holders = port_listeners(port)
+    others = ", ".join("%s (pid %d)" % (c, p) for p, c in holders) or "another program"
     msg = ("port %d is already in use by %s. Quit that program, or change the "
            "port in the extension options." % (int(port), others))
     if any(c.startswith("Code") for _, c in holders):
@@ -192,7 +213,11 @@ def free_port(port):
     return msg
 
 
-def start_ciadpi(user_args, port):
+def start_ciadpi(user_args, port, flexible=False):
+    """Launch ciadpi on <port>. With <flexible> (sent by extensions that read
+    the "port" field of the reply), fall back to a free port instead of failing
+    when something else holds <port>; older extensions would point Chrome at
+    the wrong port, so they keep the strict behaviour."""
     exe = find_exe()
     if not exe:
         return {"ok": False, "error": "ciadpi.exe not found"}
@@ -203,7 +228,11 @@ def start_ciadpi(user_args, port):
     reap_orphans(exe)   # free the port from any untracked previous launch
     time.sleep(0.3)
     busy = free_port(port)
-    if busy:
+    if busy and flexible:
+        alt = pick_free_port(port)
+        log("port busy, falling back to", alt, "--", busy)
+        port = alt
+    elif busy:
         log("start blocked:", busy)
         return {"ok": False, "error": busy}
     cmd =[exe, "-i", "127.0.0.1", "-p", str(int(port))] + shlex.split(user_args or "")
@@ -240,7 +269,7 @@ def start_ciadpi(user_args, port):
         return {"ok": False, "error": msg, "rc": p.returncode, "cmd": cmd, "stderr": stderr_tail}
     write_state(p.pid, int(port))
     log("started", exe, "pid", p.pid, "cmd", cmd)
-    return {"ok": True, "running": True, "pid": p.pid, "exe": exe}
+    return {"ok": True, "running": True, "pid": p.pid, "exe": exe, "port": int(port)}
 
 
 def read_errlog():
@@ -269,7 +298,8 @@ def status():
 def handle(msg):
     cmd = (msg or {}).get("cmd")
     if cmd == "start":
-        return start_ciadpi(msg.get("args", ""), msg.get("port", 1080))
+        return start_ciadpi(msg.get("args", ""), msg.get("port", 1080),
+                            bool(msg.get("flexiblePort")))
     if cmd == "stop":
         return stop_ciadpi()
     if cmd == "status":

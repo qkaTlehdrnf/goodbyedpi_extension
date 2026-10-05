@@ -125,7 +125,9 @@ function nativeSend(message) {
 }
 
 async function startBackend(s) {
-  return nativeSend({ cmd: "start", args: s.args, port: Number(s.port) });
+  // flexiblePort: if the port is taken by another program (e.g. VS Code
+  // forwarding 1080), the host picks a free one and reports it as `port`.
+  return nativeSend({ cmd: "start", args: s.args, port: Number(s.port), flexiblePort: true });
 }
 async function stopBackend() {
   return nativeSend({ cmd: "stop" });
@@ -158,6 +160,9 @@ async function ensureBackendAndProxy(s) {
       return { ok: false, reason: "host-missing", hostInstalled: false, detail: host };
     }
     let running = !!host.running;
+    // The host may run ciadpi on a different port than configured (fallback
+    // when the configured one is busy); always point Chrome at the real one.
+    let port = host.port;
     if (!running) {
       const started = await startBackend(s);
       log("started ciadpi ->", started);
@@ -166,15 +171,18 @@ async function ensureBackendAndProxy(s) {
         log("FAIL start-failed:", started && started.error);
         return { ok: false, reason: "start-failed", hostInstalled: true, detail: started };
       }
+      port = started.port;
     }
+    const live = port ? { ...s, port: Number(port) } : s;
+    if (live.port !== Number(s.port)) log("configured port busy; using", live.port);
     try {
-      await applyProxy(s);
+      await applyProxy(live);
     } catch (e) {
       log("FAIL proxy-set threw:", e);
       return { ok: false, reason: "proxy-set-failed", hostInstalled: true, detail: String(e) };
     }
     log("OK: backend running, proxy applied (Chrome only).");
-    return { ok: true, hostInstalled: true, running: true };
+    return { ok: true, hostInstalled: true, running: true, port: Number(live.port) };
   }
 
   // Manual mode: the user starts ciadpi themselves. Apply the proxy, then

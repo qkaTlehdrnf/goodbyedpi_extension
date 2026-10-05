@@ -145,7 +145,9 @@ async function refresh() {
   state.platform = res.platform || "";
   renderProxy(res.settings.enabled);
   renderBackend(res.backend, res.settings.autostart);
-  $("endpoint").textContent = res.settings.host + ":" + res.settings.port;
+  // Show the port ciadpi really runs on — the host may have moved off a busy one.
+  const livePort = res.backend && res.backend.running && res.backend.port;
+  $("endpoint").textContent = res.settings.host + ":" + (livePort || res.settings.port);
   // Surface guidance up front when auto-start is on but the helper is absent.
   if (res.settings.autostart && res.backend && !res.backend.ok) {
     showInstall("host-missing");

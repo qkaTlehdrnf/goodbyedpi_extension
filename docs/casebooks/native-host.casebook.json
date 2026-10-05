@@ -14,5 +14,13 @@
     "cause": "VS Code Remote-SSH auto-forwarded remote port 1080 (a ciadpi run on the remote Linux dev box) to the Mac's 127.0.0.1:1080 and kept the forward bound.",
     "fix": "Stop the forward in VS Code's Ports panel or set remote.autoForwardPorts=false; the host now names the owner and adds a VS Code hint.",
     "rule": "nh-check-port-owner"
+  },
+  {
+    "id": "nh-003",
+    "date": "2026-10-06",
+    "symptom": "Even with the owner named in the error, users had to fix VS Code / change the port by hand; the goal is paste-one-line-and-toggle.",
+    "cause": "The host treated a busy port as fatal. The port is an internal detail between host and extension, so nothing requires it to be 1080.",
+    "fix": "Extension sends flexiblePort:true; host falls back to a free nearby port and returns it; extension points the proxy at the reported port. Old extensions (no flag) keep the strict error, since they would aim Chrome at the configured port.",
+    "rule": "nh-self-heal-port"
   }
 ]
