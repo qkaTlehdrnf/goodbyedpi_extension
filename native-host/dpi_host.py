@@ -225,6 +225,12 @@ def start_ciadpi(user_args, port):
         msg = "ciadpi exited immediately (rc=%s)" % p.returncode
         if stderr_tail:
             msg += ": " + stderr_tail
+        if "in use" in stderr_tail:
+            # lsof can't see other users' (e.g. root) sockets without sudo, so
+            # free_port() found nothing; point the user at the manual check.
+            msg += (" -- another user's program may hold port %d. Check with: "
+                    "sudo lsof -nP -iTCP:%d -sTCP:LISTEN, or change the port in "
+                    "the extension options." % (int(port), int(port)))
         return {"ok": False, "error": msg, "rc": p.returncode, "cmd": cmd, "stderr": stderr_tail}
     write_state(p.pid, int(port))
     log("started", exe, "pid", p.pid, "cmd", cmd)
