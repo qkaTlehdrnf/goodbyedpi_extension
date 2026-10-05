@@ -137,6 +137,55 @@ def reap_orphans(exe):
         pass  # pkill absent — best effort
 
 
+def port_listeners(port):
+    """Return [(pid, command)] of processes listening on 127.0.0.1:<port> (*nix).
+
+    Uses lsof, which ships with macOS; returns [] if it's unavailable.
+    """
+    if IS_WIN:
+        return []
+    try:
+        out = subprocess.run(["lsof", "-nP", "-iTCP:%d" % int(port), "-sTCP:LISTEN", "-Fpc"],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                             timeout=3).stdout.decode("utf-8", "replace")
+    except (OSError, subprocess.SubprocessError):
+        return []
+    found, pid = [], None
+    for line in out.splitlines():
+        if line.startswith("p"):
+            pid = int(line[1:])
+        elif line.startswith("c") and pid is not None:
+            found.append((pid, line[1:]))
+    return found
+
+
+def free_port(port):
+    """Make sure the proxy port is free before launching.
+
+    reap_orphans() only matches our own binary path, so a ciadpi started from
+    another location (a manual build, an older install) still holds the port.
+    Any ciadpi there is a leftover proxy of the same kind, so it's safe to kill;
+    anything else is reported so the user can quit it or pick another port.
+    Returns an error string, or None when the port is free.
+    """
+    holders = port_listeners(port)
+    for pid, comm in holders:
+        if os.path.basename(comm).startswith("ciadpi"):
+            log("killing foreign ciadpi on port", port, "pid", pid)
+            kill(pid)
+    for _ in range(10):
+        holders = port_listeners(port)
+        if not holders:
+            return None
+        if all(os.path.basename(c).startswith("ciadpi") for _, c in holders):
+            time.sleep(0.2)  # still dying
+            continue
+        break
+    others = ", ".join("%s (pid %d)" % (c, p) for p, c in holders)
+    return ("port %d is already in use by %s. Quit that program, or change the "
+            "port in the extension options." % (int(port), others))
+
+
 def start_ciadpi(user_args, port):
     exe = find_exe()
     if not exe:
@@ -147,7 +196,11 @@ def start_ciadpi(user_args, port):
         time.sleep(0.3)
     reap_orphans(exe)   # free the port from any untracked previous launch
     time.sleep(0.3)
-    cmd = [exe, "-i", "127.0.0.1", "-p", str(int(port))] + shlex.split(user_args or "")
+    busy = free_port(port)
+    if busy:
+        log("start blocked:", busy)
+        return {"ok": False, "error": busy}
+    cmd =[exe, "-i", "127.0.0.1", "-p", str(int(port))] + shlex.split(user_args or "")
     # Capture stderr so a startup failure (bad arg, port in use, ...) is visible
     # to the extension instead of a bare exit code.
     try:
