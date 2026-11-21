@@ -72,7 +72,20 @@ const REASON_TEXT = {
   "start-failed": "The companion app is installed but ciadpi failed to launch.",
   "proxy-set-failed": "Chrome refused to apply the proxy setting.",
   "proxy-unreachable": "Nothing is answering on the proxy port — the proxy isn't running.",
+  "backend-stopped":
+    "The local proxy stopped and could not be restarted, so it was turned off to keep Chrome online.",
 };
+
+// The watchdog turned the proxy off while the popup was closed: say why.
+function renderLastFailure(f, enabled) {
+  const hint = $("hint");
+  if (!f || enabled) return;
+  const when = new Date(f.at).toLocaleTimeString();
+  hint.textContent =
+    (REASON_TEXT[f.reason] || "The proxy was turned off after an error.") +
+    " (" + when + ") Turn it on again to retry.";
+  hint.classList.remove("hidden");
+}
 
 // Show the raw failure detail so a stuck user can see (and copy) exactly why the
 // toggle refused to turn on, instead of guessing. Mirrors the background log.
@@ -149,6 +162,7 @@ async function refresh() {
   state.platform = res.platform || "";
   renderProxy(res.settings.enabled);
   renderBackend(res.backend, res.settings.autostart);
+  renderLastFailure(res.lastFailure, res.settings.enabled);
   // Show the port ciadpi really runs on — the host may have moved off a busy one.
   const livePort = res.backend && res.backend.running && res.backend.port;
   $("endpoint").textContent = res.settings.host + ":" + (livePort || res.settings.port);
