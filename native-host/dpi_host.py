@@ -10,7 +10,7 @@ import sys, os, json, struct, shlex, socket, subprocess, time, signal
 
 # Bump on every host change; shown in the extension's error panel and by the
 # installer so a bug report says exactly which host was running.
-HOST_VERSION = "1.1.0"
+HOST_VERSION = "1.2.0"
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(BASE, "ciadpi.pid")
@@ -94,8 +94,41 @@ def is_alive(pid):
         return False
 
 
+def process_name(pid):
+    """Executable name of <pid> (e.g. "ciadpi"), or "" if unknown."""
+    try:
+        if IS_WIN:
+            out = subprocess.run(["tasklist", "/FI", "PID eq %d" % int(pid), "/FO", "CSV", "/NH"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=3,
+                                 creationflags=0x08000000).stdout.decode("utf-8", "replace")
+            line = out.strip().splitlines()[0] if out.strip() else ""
+            return line.split('","')[0].strip('"') if line.startswith('"') else ""
+        out = subprocess.run(["ps", "-p", str(int(pid)), "-o", "comm="],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                             timeout=3).stdout.decode("utf-8", "replace")
+        return os.path.basename(out.strip())
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return ""
+
+
+def is_ours(pid):
+    """True only if <pid> is alive AND is a ciadpi.
+
+    The PID file survives reboots and Chrome restarts, and the OS reuses PIDs,
+    so a bare liveness check can mistake an unrelated process for our proxy:
+    status would then report "running" for a dead proxy, and stop/start would
+    kill that innocent process.
+    """
+    if not is_alive(pid):
+        return False
+    name = process_name(pid)
+    # If the name can't be read (ps/tasklist missing), fall back to liveness
+    # rather than refusing to manage our own process.
+    return name.lower().startswith("ciadpi") if name else True
+
+
 def kill(pid):
-    if not pid:
+    if not pid or not is_ours(pid):
         return
     if IS_WIN:
         subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
@@ -226,7 +259,7 @@ def start_ciadpi(user_args, port, flexible=False):
     if not exe:
         return {"ok": False, "error": "ciadpi.exe not found"}
     st = read_state()
-    if st and is_alive(st.get("pid")):
+    if st and is_ours(st.get("pid")):
         kill(st.get("pid"))
         time.sleep(0.3)
     reap_orphans(exe)   # free the port from any untracked previous launch
@@ -294,8 +327,14 @@ def stop_ciadpi():
 
 def status():
     st = read_state()
-    if st and is_alive(st.get("pid")):
-        return {"ok": True, "running": True, "pid": st.get("pid"), "port": st.get("port")}
+    if st and is_ours(st.get("pid")):
+        port = st.get("port")
+        # Also require the port to be taken: a ciadpi that is alive but no
+        # longer listening is of no use to Chrome.
+        if not port or not can_bind(port):
+            return {"ok": True, "running": True, "pid": st.get("pid"), "port": port}
+    if st:
+        clear_state()  # stale: process gone, reused PID, or not listening
     return {"ok": True, "running": False}
 
 

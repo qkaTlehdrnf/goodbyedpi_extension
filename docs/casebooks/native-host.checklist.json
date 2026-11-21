@@ -20,5 +20,12 @@
     "cases": [
       "nh-001"
     ]
+  },
+  {
+    "id": "nh-verify-pid",
+    "rule": "Never trust or kill a PID from the state file without confirming it is still a ciadpi; a PID file is a hint, not proof.",
+    "cases": [
+      "nh-004"
+    ]
   }
 ]
