@@ -22,5 +22,13 @@
     "cause": "The host treated a busy port as fatal. The port is an internal detail between host and extension, so nothing requires it to be 1080.",
     "fix": "Extension sends flexiblePort:true; host falls back to a free nearby port and returns it; extension points the proxy at the reported port. Old extensions (no flag) keep the strict error, since they would aim Chrome at the configured port.",
     "rule": "nh-self-heal-port"
+  },
+  {
+    "id": "nh-004",
+    "date": "2026-11-21",
+    "symptom": "After a reboot with the toggle left ON, status could report ciadpi as running while nothing listened on the port, and stop/start could kill an unrelated process.",
+    "cause": "ciadpi.pid survives reboots and the OS reuses PIDs; status/kill only checked that the PID was alive.",
+    "fix": "is_ours()/Test-Ours: the PID must be alive AND named ciadpi before it is trusted or killed; status also requires the port to be taken, and clears a stale PID file.",
+    "rule": "nh-verify-pid"
   }
 ]

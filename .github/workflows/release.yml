@@ -86,6 +86,17 @@ jobs:
         run: choco install innosetup -y --no-progress
         shell: pwsh
 
+      - name: Sync the native host into the installer and check it parses
+        shell: pwsh
+        run: |
+          # native-host/ is the source of truth; installer/files/ is a copy.
+          Copy-Item native-host\dpi_host.ps1 installer\files\dpi_host.ps1 -Force
+          Copy-Item native-host\dpi_host.bat installer\files\dpi_host.bat -Force
+          $errs = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path installer\files\dpi_host.ps1), [ref]$null, [ref]$errs) | Out-Null
+          if ($errs) { $errs | ForEach-Object { Write-Error $_.ToString() }; throw "dpi_host.ps1 has syntax errors" }
+
       - name: Compile the installer
         shell: pwsh
         run: |
