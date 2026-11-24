@@ -143,12 +143,32 @@ function setBadge(on) {
   chrome.action.setBadgeBackgroundColor({ color: on ? "#16b9a0" : "#888888" });
 }
 
+// Shown when the watchdog had to turn the proxy off because ciadpi died and
+// could not be restarted. Cleared the next time the user turns it on.
+function setBadgeError() {
+  chrome.action.setBadgeText({ text: "!" });
+  chrome.action.setBadgeBackgroundColor({ color: "#dc2626" });
+}
+
+// Remember why the proxy was turned off behind the user's back, so the popup
+// can explain it instead of just showing OFF.
+async function recordFailure(r) {
+  await chrome.storage.local.set({
+    lastFailure: { reason: r.reason || "unknown", detail: r.detail, hostVersion: r.hostVersion || null, at: Date.now() },
+  });
+}
+async function clearFailure() {
+  await chrome.storage.local.remove("lastFailure");
+}
+
 // ---- Enable / disable ----------------------------------------------------
 
 // Bring the proxy up only when a working backend is confirmed, so a missing or
 // dead ciadpi never silently breaks Chrome's connectivity. Returns
 // { ok, reason?, hostInstalled?, ... } describing what happened.
-async function ensureBackendAndProxy(s) {
+// With opts.restart, ciadpi is relaunched even if it is already running, so
+// changed arguments or port actually take effect.
+async function ensureBackendAndProxy(s, opts = {}) {
   const host = await backendStatus();
   const hostInstalled = !!(host && host.ok);
   log("enable: ext", chrome.runtime.getManifest().version,
@@ -167,7 +187,7 @@ async function ensureBackendAndProxy(s) {
     // The host may run ciadpi on a different port than configured (fallback
     // when the configured one is busy); always point Chrome at the real one.
     let port = host.port;
-    if (!running) {
+    if (!running || opts.restart) {
       const started = await startBackend(s);
       log("started ciadpi ->", started);
       running = !!(started && started.ok && started.running);
@@ -204,6 +224,7 @@ async function ensureBackendAndProxy(s) {
 
 async function enable() {
   await setSettings({ enabled: true });
+  await clearFailure();
   const s = await getSettings();
   const r = await ensureBackendAndProxy(s);
   if (!r.ok) {
@@ -221,6 +242,7 @@ async function disable() {
   let backend = { ok: true, skipped: true };
   if (s.autostart) backend = await stopBackend();
   await setSettings({ enabled: false });
+  await clearFailure();
   setBadge(false);
   return { enabled: false, backend };
 }
@@ -251,8 +273,54 @@ chrome.runtime.onStartup.addListener(async () => {
   if (s.enabled) reapply();
 });
 
+// ---- Watchdog ------------------------------------------------------------
+
+// Chrome reports this when it cannot connect to the proxy itself, i.e. ciadpi
+// is gone. Errors reaching a site *through* the proxy (e.g.
+// ERR_SOCKS_CONNECTION_FAILED) are per-site problems and are ignored.
+const PROXY_DOWN_ERRORS = new Set(["net::ERR_PROXY_CONNECTION_FAILED"]);
+const WATCHDOG_INTERVAL_MS = 30 * 1000;
+let watchdogBusy = false;
+let watchdogLast = 0;
+
+async function watchdog(details) {
+  const now = Date.now();
+  if (watchdogBusy || now - watchdogLast < WATCHDOG_INTERVAL_MS) return;
+  watchdogBusy = true;
+  watchdogLast = now;
+  try {
+    const s = await getSettings();
+    if (!s.enabled) return;
+    log("watchdog: proxy unreachable (", details && details.error, ") — checking backend");
+    let r;
+    if (s.autostart) {
+      // Always relaunch: Chrome just failed to reach the proxy, so whatever the
+      // host's PID file claims (it can be stale), ciadpi is not serving.
+      r = await ensureBackendAndProxy(s, { restart: true });
+    } else {
+      r = (await proxyReachable()) ? { ok: true } : { ok: false, reason: "proxy-unreachable", manual: true };
+    }
+    if (r.ok) {
+      log("watchdog: backend OK");
+      setBadge(true);
+      return;
+    }
+    // Could not bring it back: release Chrome so it stays online, and say so.
+    log("watchdog: recovery failed, turning proxy off", r);
+    await clearProxy();
+    await setSettings({ enabled: false });
+    await recordFailure({ ...r, reason: "backend-stopped", detail: r.detail || r.reason });
+    setBadgeError();
+  } catch (e) {
+    log("watchdog error", e);
+  } finally {
+    watchdogBusy = false;
+  }
+}
+
 chrome.proxy.onProxyError.addListener((details) => {
   console.warn("proxy error", details);
+  if (details && PROXY_DOWN_ERRORS.has(details.error)) watchdog(details);
 });
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -263,7 +331,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           const s = await getSettings();
           const backend = await backendStatus();
           const platform = await getPlatformOs();
-          sendResponse({ ok: true, settings: s, backend, platform });
+          const { lastFailure } = await chrome.storage.local.get("lastFailure");
+          sendResponse({ ok: true, settings: s, backend, platform, lastFailure: lastFailure || null });
           break;
         }
         case "toggle": {
@@ -272,9 +341,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           break;
         }
         case "saveSettings": {
+          const before = await getSettings();
           const s = await setSettings(msg.patch);
           if (s.enabled) {
-            const r = await ensureBackendAndProxy(s); // re-apply with new args, guarded
+            // A running ciadpi keeps its old arguments and port until it is
+            // relaunched, so restart it whenever either of them changed.
+            const restart = s.args !== before.args || Number(s.port) !== Number(before.port);
+            const r = await ensureBackendAndProxy(s, { restart }); // re-apply, guarded
             if (!r.ok) {
               await setSettings({ enabled: false });
               setBadge(false);
