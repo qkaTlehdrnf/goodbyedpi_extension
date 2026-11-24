@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""FALLBACK native messaging host (Python). The default host is PowerShell
-(dpi_host.ps1), which needs no dependencies. If the PowerShell host misbehaves
-on your machine and you have Python installed, edit dpi_host.bat to call this
-file instead:  python "%~dp0dpi_host.py"
+"""Native messaging host (Python) for macOS and Linux, launched via dpi_host.sh.
+On Windows the default host is dpi_host.ps1 (no dependencies); this file also
+runs there as a fallback if you edit dpi_host.bat to call:
+python "%~dp0dpi_host.py"
 
 Protocol (Chrome native messaging): 4-byte little-endian length + UTF-8 JSON.
 """

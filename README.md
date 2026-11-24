@@ -35,12 +35,18 @@ Chrome **한 곳에서만** DPI(심층 패킷 검사) 우회를 켜고 끄는 �
 
 ## 설치 (Windows)
 
-### 사전 준비
+### 가장 간단: 설치 프로그램 (권장)
 
-- Windows + Chrome
-- Python 3 (자동 실행용 네이티브 호스트에 필요). `python --version` 으로 확인.
+1. 웹스토어에서 확장을 설치합니다.
+2. [GoodbyeDPI-for-Chrome-Setup.exe](https://github.com/qkaTlehdrnf/goodbyedpi_extension/releases/latest/download/GoodbyeDPI-for-Chrome-Setup.exe) 를 내려받아 실행합니다. (확장 팝업의 안내 패널에도 같은 링크가 있습니다.)
+   `ciadpi.exe` 와 네이티브 호스트를 `%LOCALAPPDATA%\GoodbyeDPIChrome` 에 설치하고 Chrome 에 등록합니다. 관리자 권한·Python 이 필요 없습니다.
+3. **Chrome 을 완전히 종료 후 재실행** → 토글 ON.
 
-### 1) 우회 프록시(ciadpi) 내려받기
+### 수동 설치 (개발용 / 압축해제 로드)
+
+네이티브 호스트는 Windows 에 기본 포함된 **PowerShell** 로 동작하므로 Python 은 필요 없습니다.
+
+#### 1) 우회 프록시(ciadpi) 내려받기
 
 `backend` 폴더에서 PowerShell:
 
@@ -50,13 +56,13 @@ powershell -ExecutionPolicy Bypass -File download-ciadpi.ps1
 
 → `backend\ciadpi.exe` 가 생깁니다. (출처: https://github.com/hufrea/byedpi 최신 릴리스)
 
-### 2) 확장 프로그램 로드
+#### 2) 확장 프로그램 로드
 
 1. Chrome 에서 `chrome://extensions` 열기 → 오른쪽 위 **개발자 모드** ON
 2. **압축해제된 확장 프로그램 로드** → 이 프로젝트의 **`extension`** 폴더 선택
 3. 표시된 **ID**(예: `abcdef...`) 를 복사
 
-### 3) 네이티브 호스트 등록 (토글 하나로 자동 실행되게)
+#### 3) 네이티브 호스트 등록 (토글 하나로 자동 실행되게)
 
 `native-host` 폴더에서 PowerShell:
 
@@ -64,9 +70,10 @@ powershell -ExecutionPolicy Bypass -File download-ciadpi.ps1
 powershell -ExecutionPolicy Bypass -File install-host.ps1 -ExtensionId 붙여넣은_ID
 ```
 
+이 명령이 `native-host\com.goodbyedpi.chrome.json` 을 만들고 레지스트리에 등록합니다. 이 파일은 PC 마다 경로가 달라서 저장소에 커밋하지 않습니다.
 그다음 **Chrome 을 완전히 종료 후 재실행**.
 
-### 4) 사용
+### 사용
 
 툴바의 아이콘 클릭 → 큰 스위치로 **켜짐/꺼짐**. 끝.
 
@@ -162,7 +169,7 @@ pkill -f ciadpi   # 남은 프록시 종료
 
 ## 자동 실행 없이 쓰기 (네이티브 호스트 생략)
 
-Python 설치가 싫으면 3단계를 건너뛰고:
+네이티브 호스트를 등록하지 않고 쓰려면 (Windows):
 
 1. `backend\start-ciadpi.bat` 더블클릭 (이 창을 열어두면 프록시가 켜진 상태)
 2. 확장 팝업에서 토글 ON → Chrome 만 프록시 사용
@@ -187,7 +194,11 @@ ISP·지역마다 통하는 조합이 다릅니다. 팝업 → **설정** 에서
 
 ---
 
-## 제거
+## 제거 (Windows)
+
+설치 프로그램으로 깔았다면 **설정 → 앱 → 설치된 앱** 에서 "GoodbyeDPI for Chrome" 을 제거합니다.
+
+수동 등록했다면:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File native-host\uninstall-host.ps1
@@ -208,6 +219,7 @@ powershell -ExecutionPolicy Bypass -File native-host\uninstall-host.ps1
 
 ```
 extension/        Chrome 확장 (MV3): 팝업 토글 · 프록시 제어 · 설정
-native-host/      Python 네이티브 호스트: ciadpi.exe 자동 실행/종료 + 설치 스크립트
+native-host/      네이티브 호스트 (Windows: PowerShell, macOS/Linux: Python): ciadpi 자동 실행/종료 + 설치 스크립트
+installer/        Windows 설치 프로그램 (Inno Setup) · files/ 는 native-host 의 사본
 backend/          ciadpi 내려받기·수동 실행 스크립트, 아이콘 생성기
 ```
